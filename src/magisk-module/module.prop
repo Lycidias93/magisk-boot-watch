@@ -1,7 +1,7 @@
 id=boot-watch
 name=Boot Watch Collector
-version=0.2.1
-versionCode=21
+version=0.2.2
+versionCode=22
 author=Lycidias93 / ChatGPT
 updateJson=https://raw.githubusercontent.com/Lycidias93/magisk-boot-watch/main/update.json
-description=Magisk boot evidence collector for Android devices with protected result logs, status.env, robust v0.2.1 boot export, and migration from pixel-boot-watch.
+description=Magisk boot evidence collector for Android devices with protected result logs, status.env, robust v0.2.2 active-module marker guard, boot export, and migration from pixel-boot-watch.

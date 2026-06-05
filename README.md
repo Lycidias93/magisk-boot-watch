@@ -43,3 +43,8 @@ Flash `magisk-boot-watch-v0.2.0.zip` in Magisk, reboot, then check the protected
 
 v0.2.1 restores automatic Download result export after the v0.2.0 module-id migration.
 It also hardens Magisk install permissions and keeps update.json pointed at the latest release.
+
+## v0.2.2 active-module marker fix
+
+v0.2.2 prevents the active boot-watch module from being marked for disable/remove during install.
+It keeps the robust v0.2.1 auto-export hook and updates update.json to the latest release.
