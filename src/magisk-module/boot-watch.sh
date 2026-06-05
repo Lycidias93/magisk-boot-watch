@@ -5,8 +5,8 @@
 MOD="/data/adb/modules/boot-watch"
 RT="/data/adb/boot-watch"
 DL="/storage/emulated/0/Download"
-VERSION="0.2.0"
-VERSION_CODE="20"
+VERSION="0.2.1"
+VERSION_CODE="21"
 PROFILE="${PBW_PROFILE:-standard}"
 MAX_SECONDS="${PBW_MAX_SECONDS:-360}"
 MAX_FILES="${PBW_MAX_FILES:-80}"
@@ -373,6 +373,17 @@ stage "marker_archive_export"
 
 # Archive after marker so marker is included.
 tar -czf "$ARCHIVE" -C "$RT/runs" "$RUN_ID" 2>>"$LOG" || true
+
+stage "auto_export"
+log "auto_export_start=$MOD/result-log-export.sh"
+export_rc=0
+if [ -f "$MOD/result-log-export.sh" ]; then
+  /system/bin/sh "$MOD/result-log-export.sh" "$RUN" boot >> "$LOG" 2>&1 || export_rc="$?"
+  log "auto_export_rc=$export_rc"
+else
+  export_rc=127
+  log "auto_export_missing=$MOD/result-log-export.sh"
+fi
 
 if [ -x "$MOD/result-log-export.sh" ]; then
   /system/bin/sh "$MOD/result-log-export.sh" "$RUN" boot >> "$LOG" 2>&1 || true

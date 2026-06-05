@@ -9,4 +9,4 @@ This is the installable Magisk module source for Boot Watch Collector.
 - New module id: `boot-watch`
 - New runtime path: `/data/adb/boot-watch`
 - Legacy v0.1.x module id `pixel-boot-watch` is marked with `disable` and `remove` during install/service start when present.
-- Existing legacy runtime data under `/data/adb/pixel-boot-watch` is not deleted automatically.
+- Existing legacy runtime data under `/data/adb/boot-watch` is not deleted automatically.

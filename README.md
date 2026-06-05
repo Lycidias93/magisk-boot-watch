@@ -38,3 +38,8 @@ On Pixel/Termux setups using Sortify protected names, v0.2.0 writes protected re
 ## Install
 
 Flash `magisk-boot-watch-v0.2.0.zip` in Magisk, reboot, then check the protected result logs in Download.
+
+## v0.2.1 auto-export fix
+
+v0.2.1 restores automatic Download result export after the v0.2.0 module-id migration.
+It also hardens Magisk install permissions and keeps update.json pointed at the latest release.
