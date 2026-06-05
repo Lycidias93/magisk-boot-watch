@@ -48,3 +48,8 @@ It also hardens Magisk install permissions and keeps update.json pointed at the 
 
 v0.2.2 prevents the active boot-watch module from being marked for disable/remove during install.
 It keeps the robust v0.2.1 auto-export hook and updates update.json to the latest release.
+
+
+## v0.2.3 service marker guard
+
+This release fixes service-time active marker cleanup so the active `boot-watch` module cannot be marked with `disable` or `remove` by its own service.

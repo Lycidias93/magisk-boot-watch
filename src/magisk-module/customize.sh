@@ -1,8 +1,9 @@
 #!/system/bin/sh
 SKIPUNZIP=0
 LEGACY_MOD="/data/adb/modules/pixel-boot-watch"
+ACTIVE_MOD="/data/adb/modules/boot-watch"
 ui_print "********************************"
-ui_print " Boot Watch Collector v0.2.2"
+ui_print " Boot Watch Collector v0.2.3"
 ui_print "********************************"
 ui_print "- New module id: boot-watch"
 ui_print "- Runtime: /data/adb/boot-watch"
@@ -21,8 +22,11 @@ fi
 if [ -n "${MODPATH:-}" ]; then
   rm -f "$MODPATH/disable" "$MODPATH/remove" 2>/dev/null || true
 fi
-ui_print "- v0.2.2: active-module marker guard"
-ui_print "- v0.2.2: robust boot export hook"
+if [ -f "$ACTIVE_MOD/module.prop" ] && grep -q "^id=boot-watch$" "$ACTIVE_MOD/module.prop" 2>/dev/null; then
+  rm -f "$ACTIVE_MOD/disable" "$ACTIVE_MOD/remove" 2>/dev/null || true
+fi
+ui_print "- v0.2.3: service-time active-module marker guard"
+ui_print "- v0.2.3: robust boot export hook"
 ui_print "- Setting executable permissions"
 set_perm "$MODPATH/service.sh" 0 0 0755
 set_perm "$MODPATH/boot-watch.sh" 0 0 0755

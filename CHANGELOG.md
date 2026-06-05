@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.2.3
+
+- Fix service-time active marker regression from v0.2.2.
+- Scope legacy cleanup to `/data/adb/modules/pixel-boot-watch` only.
+- Add active `boot-watch` marker self-heal during service start.
+
+
 ## v0.2.0 - 2026-06-05
 
 - Rename internal module id from `pixel-boot-watch` to `boot-watch`.
