@@ -1,7 +1,7 @@
 #!/system/bin/sh
-# Pixel Boot Watch original service launcher preserved for v0.1.3 wrapper compatibility.
+# Boot Watch Collector original service launcher preserved for v0.1.3 wrapper compatibility.
 MODDIR="${0%/*}"
-RT="/data/adb/pixel-boot-watch"
+RT="/data/adb/boot-watch"
 LOG="$RT/service-launch.log"
 mkdir -p "$RT"
 (

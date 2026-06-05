@@ -1,11 +1,15 @@
 # Changelog
 
-## v0.1.5.1 - First public baseline
+## v0.2.0 - 2026-06-05
 
-- Publish verified Boot Watch Collector baseline.
-- Preserve the verified `pixel-boot-watch` internal module id for this release.
-- Export protected `pixel_local__pixel-boot-watch-*` result logs.
-- Add machine-readable `status.env`.
-- Add Action export before/after proof.
-- Add bounded AshLooper health evidence.
-- Fix `file_name_too_long` status/count reporting.
+- Rename internal module id from `pixel-boot-watch` to `boot-watch`.
+- Move runtime path from `/data/adb/pixel-boot-watch` to `/data/adb/boot-watch`.
+- Mark legacy `pixel-boot-watch` module for removal during install/service start.
+- Add Magisk `updateJson` support through root `update.json`.
+- Rename public result artifacts to `boot-watch-*` while preserving the Pixel-local protected prefix for Sortify holds.
+- Publish release asset `magisk-boot-watch-v0.2.0.zip`.
+
+## v0.1.5.1 - 2026-06-05
+
+- Public baseline release as Boot Watch Collector.
+- Verified baseline build still used legacy internal id `pixel-boot-watch`.

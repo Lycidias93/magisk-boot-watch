@@ -1,10 +1,10 @@
 #!/system/bin/sh
 MODDIR="${0%/*}"
-RT="/data/adb/pixel-boot-watch"
+RT="/data/adb/boot-watch"
 DL="/storage/emulated/0/Download"
-LAST="$DL/pixel_local__pixel-boot-watch-last-result.txt"
-ACTION="$DL/pixel_local__pixel-boot-watch-action-last-result.txt"
-STATUS="$DL/pixel_local__pixel-boot-watch-status.env"
+LAST="$DL/pixel_local__boot-watch-last-result.txt"
+ACTION="$DL/pixel_local__boot-watch-action-last-result.txt"
+STATUS="$DL/pixel_local__boot-watch-status.env"
 mkdir -p "$RT" "$DL"
 
 if [ "${1:-}" = "--status" ]; then
@@ -20,7 +20,7 @@ if [ "${1:-}" = "--status" ]; then
     fi
   done
   [ -f "$STATUS" ] && cat "$STATUS" 2>/dev/null || true
-  echo "RESULT: PIXEL_BOOT_WATCH_ACTION_STATUS_DONE rc=0"
+  echo "RESULT: BOOT_WATCH_ACTION_STATUS_DONE rc=0"
   exit 0
 fi
 
@@ -41,7 +41,7 @@ if [ -x "$MODDIR/result-log-export.sh" ]; then
   /system/bin/sh "$MODDIR/result-log-export.sh" "" action
   rc=$?
 else
-  echo "RESULT: PIXEL_BOOT_WATCH_ACTION_EXPORT_DONE rc=2 reason=no_result_export"
+  echo "RESULT: BOOT_WATCH_ACTION_EXPORT_DONE rc=2 reason=no_result_export"
   exit 2
 fi
 
@@ -66,5 +66,5 @@ printf 'after_status_exists=%s
 echo "protected_names=yes"
 echo "sortify_hold_expected=yes"
 [ "$rc" = "0" ] || exit "$rc"
-echo "RESULT: PIXEL_BOOT_WATCH_ACTION_EXPORT_DONE rc=0"
+echo "RESULT: BOOT_WATCH_ACTION_EXPORT_DONE rc=0"
 exit 0

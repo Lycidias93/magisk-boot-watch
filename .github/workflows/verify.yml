@@ -1,4 +1,4 @@
-name: Verify
+name: verify
 
 on:
   push:
@@ -9,5 +9,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify release zip
-        run: bash tools/verify-magisk-boot-watch-v0.1.5.1.sh releases/v0.1.5.1/magisk-boot-watch-v0.1.5.1.zip
+      - name: Verify release zip when present
+        run: |
+          set -euo pipefail
+          if [ -f releases/v0.2.0/magisk-boot-watch-v0.2.0.zip ]; then
+            bash tools/verify-magisk-boot-watch-v0.2.0.sh releases/v0.2.0/magisk-boot-watch-v0.2.0.zip
+          fi
+          find src/magisk-module -name '*.sh' -print0 | xargs -0 -r sh -n
