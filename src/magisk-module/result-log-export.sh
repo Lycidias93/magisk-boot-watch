@@ -1,6 +1,6 @@
 #!/system/bin/sh
-# Export latest Pixel Boot Watch run into readable protected Download result log.
-RT="/data/adb/pixel-boot-watch"
+# Export latest Boot Watch Collector run into readable protected Download result log.
+RT="/data/adb/boot-watch"
 DL="/storage/emulated/0/Download"
 RUN="${1:-}"
 MODE="${2:-action}"
@@ -8,14 +8,14 @@ if [ -z "$RUN" ]; then
   RUN="$(find "$RT/runs" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sort | tail -1)"
 fi
 if [ -z "$RUN" ] || [ ! -d "$RUN" ]; then
-  echo "RESULT: PIXEL_BOOT_WATCH_RESULT_LOG_DONE rc=2 reason=no_run"
+  echo "RESULT: BOOT_WATCH_RESULT_LOG_DONE rc=2 reason=no_run"
   exit 2
 fi
 RUN_ID="$(basename "$RUN")"
-OUT="$DL/pixel_local__pixel-boot-watch-$RUN_ID-result.txt"
-LAST="$DL/pixel_local__pixel-boot-watch-last-result.txt"
-ACTION="$DL/pixel_local__pixel-boot-watch-action-last-result.txt"
-STATUS="$DL/pixel_local__pixel-boot-watch-status.env"
+OUT="$DL/pixel_local__boot-watch-$RUN_ID-result.txt"
+LAST="$DL/pixel_local__boot-watch-last-result.txt"
+ACTION="$DL/pixel_local__boot-watch-action-last-result.txt"
+STATUS="$DL/pixel_local__boot-watch-status.env"
 TMP="$OUT.tmp.$$"
 STATUS_TMP="$STATUS.tmp.$$"
 mkdir -p "$DL"
@@ -67,7 +67,7 @@ esac
 mv -f "$STATUS_TMP" "$STATUS"
 
 {
-  echo "# Pixel Boot Watch result"
+  echo "# Boot Watch Collector result"
   echo "generated=$(date +%Y-%m-%dT%H:%M:%S%z)"
   echo "mode=$MODE"
   echo "run_id=$RUN_ID"
@@ -122,7 +122,7 @@ mv -f "$STATUS_TMP" "$STATUS"
     ls -lt "$RUN/$d" 2>/dev/null | head -20 || true
   done
   echo
-  echo "RESULT: PIXEL_BOOT_WATCH_RESULT_LOG_DONE rc=0"
+  echo "RESULT: BOOT_WATCH_RESULT_LOG_DONE rc=0"
 } > "$TMP" 2>&1 || true
 mv -f "$TMP" "$OUT"
 cp -f "$OUT" "$LAST"
@@ -140,5 +140,5 @@ status_file=%s
 grep -E '^archive_path=' "$RUN/result.marker" 2>/dev/null || true
 echo "protected_names=yes"
 echo "sortify_hold_expected=yes"
-echo "RESULT: PIXEL_BOOT_WATCH_RESULT_LOG_DONE rc=0"
+echo "RESULT: BOOT_WATCH_RESULT_LOG_DONE rc=0"
 exit 0

@@ -1,7 +1,7 @@
-id=pixel-boot-watch
-name=Pixel Boot Watch
-version=0.1.5.1
-versionCode=16
+id=boot-watch
+name=Boot Watch Collector
+version=0.2.0
+versionCode=20
 author=Lycidias93 / ChatGPT
-updateJson=
-description=Pixel/Magisk boot evidence collector with protected pixel_local result logs, status.env, bounded AshLooper health and fixed file-name-too-long status/count reporting.
+updateJson=https://raw.githubusercontent.com/Lycidias93/magisk-boot-watch/main/update.json
+description=Magisk boot evidence collector for Android devices with protected result logs, status.env, bounded AshLooper health, and v0.2.0 migration from pixel-boot-watch.

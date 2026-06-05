@@ -1,23 +1,12 @@
-# Pixel Boot Watch v0.1.5.1
+# Boot Watch Collector
 
-Comprehensive one-shot post-boot evidence collector for rooted Pixel/Magisk systems.
+Magisk boot evidence collector for Android devices.
 
-- bounded local-only collector
-- no daemon after completion
-- readable Download result log after boot
-- Magisk Action Button exports latest run
-- no network/upload behavior
+This is the installable Magisk module source for Boot Watch Collector.
 
+## v0.2.0 migration
 
-## v0.1.5.1 protected result logs
-
-Readable result logs are written with the `pixel_local__` prefix so Sortify should treat them as Pixel-local protected hold files:
-
-- `pixel_local__pixel-boot-watch-<run_id>-boot-result.txt`
-- `pixel_local__pixel-boot-watch-last-result.txt`
-- `pixel_local__pixel-boot-watch-action-last-result.txt`
-- `pixel_local__pixel-boot-watch-status.env`
-
-The boot archive remains `pixel-boot-watch-<run_id>.tar.gz`.
-
-v0.1.5.1 also adds bounded AshLooper/AshReXcue health evidence and a compact machine-readable `status.env`.
+- New module id: `boot-watch`
+- New runtime path: `/data/adb/boot-watch`
+- Legacy v0.1.x module id `pixel-boot-watch` is marked with `disable` and `remove` during install/service start when present.
+- Existing legacy runtime data under `/data/adb/pixel-boot-watch` is not deleted automatically.

@@ -1,12 +1,12 @@
 #!/system/bin/sh
-# Pixel Boot Watch v0.1.5.1 comprehensive one-shot collector
+# Boot Watch Collector v0.1.5.1 comprehensive one-shot collector
 # Bounded, local-only, no daemon after completion.
 
-MOD="/data/adb/modules/pixel-boot-watch"
-RT="/data/adb/pixel-boot-watch"
+MOD="/data/adb/modules/boot-watch"
+RT="/data/adb/boot-watch"
 DL="/storage/emulated/0/Download"
-VERSION="0.1.5.1"
-VERSION_CODE="16"
+VERSION="0.2.0"
+VERSION_CODE="20"
 PROFILE="${PBW_PROFILE:-standard}"
 MAX_SECONDS="${PBW_MAX_SECONDS:-360}"
 MAX_FILES="${PBW_MAX_FILES:-80}"
@@ -20,11 +20,11 @@ CLASSIFY="$RUN/classification.txt"
 REDFLAGS="$RUN/red_flags.txt"
 REDFLAGS_SUMMARY="$RUN/red_flags_summary.txt"
 MARKER="$RUN/result.marker"
-ARCHIVE="$DL/pixel-boot-watch-$RUN_ID.tar.gz"
-RESULT_TXT="$DL/pixel_local__pixel-boot-watch-$RUN_ID-result.txt"
-LAST_TXT="$DL/pixel_local__pixel-boot-watch-last-result.txt"
-ACTION_TXT="$DL/pixel_local__pixel-boot-watch-action-last-result.txt"
-STATUS_ENV="$DL/pixel_local__pixel-boot-watch-status.env"
+ARCHIVE="$DL/boot-watch-$RUN_ID.tar.gz"
+RESULT_TXT="$DL/pixel_local__boot-watch-$RUN_ID-result.txt"
+LAST_TXT="$DL/pixel_local__boot-watch-last-result.txt"
+ACTION_TXT="$DL/pixel_local__boot-watch-action-last-result.txt"
+STATUS_ENV="$DL/pixel_local__boot-watch-status.env"
 START_EPOCH="$(date +%s)"
 LOGD_STARTED_BY_PBW=0
 LOGD_WAS_STOPPED=0
@@ -135,7 +135,7 @@ classify_dir() {
   done
 }
 
-log "Pixel Boot Watch v$VERSION comprehensive collector"
+log "Boot Watch Collector v$VERSION comprehensive collector"
 log "run_id=$RUN_ID"
 log "run_dir=$RUN"
 log "profile=$PROFILE"
@@ -299,7 +299,7 @@ ash_count="$(find "$RUN/rescue/ashlooper_logs" -type f 2>/dev/null | wc -l | tr 
 ashlooper_present="$(grep -E '^ashlooper_present=' "$RUN/rescue/ashlooper_health.txt" 2>/dev/null | tail -1 | cut -d= -f2-)"
 ashlooper_version="$(grep -E '^version=' "$RUN/rescue/ashlooper_health.txt" 2>/dev/null | head -1 | cut -d= -f2-)"
 {
-  echo "Pixel Boot Watch v$VERSION comprehensive summary"
+  echo "Boot Watch Collector v$VERSION comprehensive summary"
   echo "version=$VERSION"
   echo "versionCode=$VERSION_CODE"
   echo "profile=$PROFILE"
@@ -353,7 +353,7 @@ fi
 
 stage "marker_archive_export"
 {
-  echo "RESULT: PIXEL_BOOT_WATCH_BOOT_DONE rc=0"
+  echo "RESULT: BOOT_WATCH_BOOT_DONE rc=0"
   echo "version=$VERSION"
   echo "versionCode=$VERSION_CODE"
   echo "profile=$PROFILE"
@@ -378,5 +378,5 @@ if [ -x "$MOD/result-log-export.sh" ]; then
   /system/bin/sh "$MOD/result-log-export.sh" "$RUN" boot >> "$LOG" 2>&1 || true
 fi
 
-log "RESULT: PIXEL_BOOT_WATCH_BOOT_DONE rc=0 run_dir=$RUN archive=$ARCHIVE result=$RESULT_TXT"
+log "RESULT: BOOT_WATCH_BOOT_DONE rc=0 run_dir=$RUN archive=$ARCHIVE result=$RESULT_TXT"
 exit 0
