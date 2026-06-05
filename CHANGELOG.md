@@ -19,3 +19,9 @@
 - Fixes automatic boot export after the v0.2.0 module-id migration.
 - Executes result-log-export.sh through /system/bin/sh and logs auto_export_rc.
 - Hardens Magisk install permissions for module scripts.
+
+## v0.2.2 - 2026-06-05
+
+- Fixes active-module disable/remove marker regression after v0.2.1.
+- Limits legacy cleanup to /data/adb/modules/pixel-boot-watch and clears accidental MODPATH markers.
+- Keeps v0.2.1 robust auto-export and executable permission hardening.
