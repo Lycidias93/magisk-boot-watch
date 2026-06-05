@@ -5,7 +5,7 @@
 MOD="/data/adb/modules/boot-watch"
 RT="/data/adb/boot-watch"
 DL="/storage/emulated/0/Download"
-VERSION="0.2.2"
+VERSION="0.2.3"
 VERSION_CODE="22"
 PROFILE="${PBW_PROFILE:-standard}"
 MAX_SECONDS="${PBW_MAX_SECONDS:-360}"
