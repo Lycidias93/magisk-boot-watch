@@ -1,27 +1,22 @@
-# Boot Watch Collector v0.2.0
+# Boot Watch Collector v0.2.1
 
-This release performs the real public id migration and enables Magisk online updates.
+v0.2.1 fixes the first post-migration export issue found after v0.2.0.
 
-## Changed
+## Fixed
 
-- New module id: `boot-watch`
-- New runtime path: `/data/adb/boot-watch`
-- Legacy module id `pixel-boot-watch` is marked for removal when present.
-- `updateJson` now points to the public repository `update.json`.
-- Public release asset: `magisk-boot-watch-v0.2.0.zip`
+- Restores automatic boot result export for the new boot-watch namespace.
+- Runs result-log-export.sh through /system/bin/sh instead of depending on the executable bit.
+- Adds explicit auto_export_start and auto_export_rc markers to the boot log.
+- Hardens Magisk install permissions for service, action, manual collection and export scripts.
 
-## Migration behavior
+## Expected output
 
-Flash v0.2.0 in Magisk and reboot. Do not manually delete the old module before flashing. The installer/service marks `/data/adb/modules/pixel-boot-watch` with `disable` and `remove` if present.
+After reboot, Boot Watch Collector should create:
 
-Existing old evidence under `/data/adb/pixel-boot-watch` is not deleted.
+- /storage/emulated/0/Download/pixel_local__boot-watch-status.env
+- /storage/emulated/0/Download/pixel_local__boot-watch-last-result.txt
+- /storage/emulated/0/Download/boot-watch-<run_id>.tar.gz
 
-## Expected post-reboot status
+## Update channel
 
-```text
-id=boot-watch
-version=0.2.0
-versionCode=20
-runtime=/data/adb/boot-watch
-legacy /data/adb/modules/pixel-boot-watch/remove=present or legacy module absent
-```
+Online updates remain enabled through update.json.
