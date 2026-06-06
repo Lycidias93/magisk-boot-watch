@@ -53,3 +53,8 @@ It keeps the robust v0.2.1 auto-export hook and updates update.json to the lates
 ## v0.2.3 service marker guard
 
 This release fixes service-time active marker cleanup so the active `boot-watch` module cannot be marked with `disable` or `remove` by its own service.
+
+
+## v0.2.4 versionCode metadata fix
+
+This release aligns the runtime `pbw_versionCode` export with `module.prop` and `update.json` while keeping the active marker self-heal and auto-export path intact.
