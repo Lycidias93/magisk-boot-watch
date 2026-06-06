@@ -49,7 +49,7 @@ Boot Watch Collector is bounded and local-only. It captures snapshots after boot
 | Boot/core state | Time, uptime, uid, SELinux mode, boot-completed props, boot reason, verified boot state, slot suffix, build fingerprint, Android release/SDK, focused boot/debug/system props. |
 | Magisk | `magisk -V`, `magisk -v`, `/data/adb/magisk.log`, `/cache/magisk.log`, module matrix with `id`, `name`, `version`, `versionCode`, `disable`, `remove`, `service.sh`, `post-fs-data.sh`, and `action.sh`. |
 | Magisk service scripts | `/data/adb/service.d` and `/data/adb/post-fs-data.d` listing plus quick shell syntax checks. |
-| Zygisk / ART / LSPosed | Mountinfo focus for Zygisk/Vector/ReZygisk/LSPosed/ART, dex2oat overlay check, `lspd` service status, latest LSPosed logs, ART dexopt/staged-session status, SafetyCore/GMS/GSF/Vending package paths. |
+| Zygisk / ART / LSPosed | Mountinfo focus for Zygisk/Vector/ReZygisk/LSPosed/ART, dex2oat overlay check, `lspd` service status, latest LSPosed logs, ART dexopt/staged-session status, SafetyCore/GMS/GSF/Vending package paths. In vNext code, rotated LSPosed/lspd logs are prepared as bounded `extended` profile tails. |
 | Binder/service health | `service check` for settings/package/activity/power/dropbox, focused service list, selected safe-volume and SafetyCore checks. |
 | Audio safe-volume state | Audio safe-volume service marker and selected global audio safe-volume/CSD settings. |
 | AshLooper / AshReXcue | Module presence, version, marker state, service/action scripts, selected config/state/status props, bounded candidate file list, and up to 10 bounded health/log excerpts. |
@@ -76,12 +76,27 @@ The current release intentionally avoids heavy full-device dumps. Good vNext can
 | `dumpsys meminfo` focused summary | Better memory pressure triage than `free`/PSI alone. | Medium; bound total and avoid per-app deep dumps by default. |
 | `dumpsys jobscheduler` / `alarm` / `deviceidle` | Useful for post-boot delayed jobs, idle restrictions, and wake behavior. | Medium; bound output. |
 | SurfaceFlinger / WindowManager / input | Useful for black screen, lockscreen, keyboard, touch, or UI boot issues. | Medium; collect only focused summaries. |
-| Magisk per-module runtime logs | Current module matrix shows state, but not every module's own log files. | Medium; require allowlist or safe path patterns. |
+| Magisk per-module runtime logs | Current module matrix shows state. vNext code adds an opt-in extended allowlist for Frosty `logs/kernel_tweaks.log`, `logs/ram.log`, and `logs/services.log`; other Zygisk-stack modules remain status-only until real log paths are observed. | Medium; keep bounded by module allowlist, max lines, and profile gate. |
 | LSPosed module/config snapshot | Useful for module activation and scope issues. | Medium-high; avoid DB dumps by default, use allowlisted summaries only. |
 | App-specific package focus | Targeted package state for SafetyCore, banking, TAN, PixelXpert, etc. | Medium-high; opt-in package allowlist only. |
 | Optional full bugreport handoff | Maximum context for rare issues. | High/heavy/privacy-sensitive; never default. |
 
 Proposed vNext direction: keep `standard` profile as-is, add `extended` for bounded extra diagnostics, and add `profile.env`/Action selection so heavy or privacy-sensitive collectors remain opt-in.
+
+<!-- MODULE_RUNTIME_LOGS_VNEXT_START -->
+Discovery result from the Pixel module-log inventory:
+
+- `Frosty` currently has real module-owned logs under `/data/adb/modules/Frosty/logs/`.
+- `LSPosed/lspd` has current logs already covered and rotated `log.old` files useful for post-reboot analysis.
+- `ReZygisk`, `Treat Wheel`, `Vector`, `Zygisk Detach`, `Tricky Store`, `Play Integrity Fix`, `Anti SafetyCore`, and `rvmm-zygisk-mount` are kept status-only until module-owned runtime log files are observed.
+
+Implementation guard:
+
+- `standard` profile stays unchanged for foreign module log contents.
+- `extended` profile, or `PBW_COLLECT_MODULE_LOGS=1`, may collect bounded tails from the allowlist.
+- No LSPosed database dumps, no app-private data, and no unbounded recursive module copies.
+<!-- MODULE_RUNTIME_LOGS_VNEXT_END -->
+
 
 
 <!-- ZYGISK_STACK_TREAT_WHEEL_VECTOR_VNEXT_20260606_START -->

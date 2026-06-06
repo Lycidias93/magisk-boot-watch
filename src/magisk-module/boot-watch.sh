@@ -167,7 +167,7 @@ if [ "$logd_before" = "stopped" ]; then
 fi
 
 stage "static_core"
-mkdir -p "$RUN/boot" "$RUN/magisk" "$RUN/modules" "$RUN/zygisk" "$RUN/lsposed" "$RUN/art" "$RUN/binder" "$RUN/audio_safe" "$RUN/rescue" "$RUN/dispatcher" "$RUN/thermal" "$RUN/power" "$RUN/network" "$RUN/service_d" "$RUN/storage" "$RUN/memory" "$RUN/kernel" "$RUN/logcat" "$RUN/anr" "$RUN/tombstones" "$RUN/dropbox"
+mkdir -p "$RUN/boot" "$RUN/magisk" "$RUN/modules" "$RUN/zygisk" "$RUN/lsposed" "$RUN/art" "$RUN/binder" "$RUN/audio_safe" "$RUN/rescue" "$RUN/module_runtime" "$RUN/dispatcher" "$RUN/thermal" "$RUN/power" "$RUN/network" "$RUN/service_d" "$RUN/storage" "$RUN/memory" "$RUN/kernel" "$RUN/logcat" "$RUN/anr" "$RUN/tombstones" "$RUN/dropbox"
 
 run_file "$RUN/boot/core.txt" "date -Is; uptime; id; getenforce 2>/dev/null || true; getprop sys.boot_completed; getprop dev.bootcomplete; getprop ro.boot.bootreason; getprop ro.boot.verifiedbootstate; getprop ro.boot.flash.locked; getprop ro.boot.vbmeta.device_state; getprop ro.boot.slot_suffix; getprop ro.build.fingerprint; getprop ro.build.version.release; getprop ro.build.version.sdk"
 run_file "$RUN/boot/props_focus.txt" "getprop | grep -Ei 'boot|zygisk|magisk|dex2oat|art|thermal|wifi|radio|telephony|net.dns|lmk|memory|safety|debug' | head -n $MAX_LINES"
@@ -240,7 +240,60 @@ collect_ashlooper_health() {
     } > "$logs/${h}_${base}.txt" 2>&1 || true
   done
 }
+
+collect_module_runtime_logs() {
+  stage "module_runtime_logs"
+  mkdir -p "$RUN/module_runtime" "$RUN/module_runtime/frosty" "$RUN/module_runtime/lsposed_log_old"
+  {
+    echo "module_runtime_time=$(date +%Y-%m-%dT%H:%M:%S%z)"
+    echo "profile=$PROFILE"
+    echo "pbw_collect_module_logs=${PBW_COLLECT_MODULE_LOGS:-0}"
+    for m in Frosty rezygisk treat_wheel zygisk_vector zygisk-detach tricky_store playintegrityfix anti_safetycore rvmm-zygisk-mount dirtysepbypass sortify ssh_drop_dispatcher; do
+      d="/data/adb/modules/$m"
+      [ -d "$d" ] || continue
+      echo "--- module=$m ---"
+      grep -E '^(id|name|version|versionCode|description)=' "$d/module.prop" 2>/dev/null || true
+      [ -e "$d/disable" ] && echo "disable=present" || echo "disable=absent"
+      [ -e "$d/remove" ] && echo "remove=present" || echo "remove=absent"
+      if [ -d "$d/logs" ]; then
+        echo "logs_dir=present"
+        find "$d/logs" -maxdepth 1 -type f 2>/dev/null | while IFS= read -r f; do
+          s="$(wc -c < "$f" 2>/dev/null || echo 0)"
+          mt="$(date -r "$f" +%Y-%m-%dT%H:%M:%S%z 2>/dev/null || true)"
+          echo "log_candidate size=$s mtime=$mt path=$f"
+        done
+      else
+        echo "logs_dir=absent"
+      fi
+    done
+  } > "$RUN/module_runtime/known_modules.txt" 2>&1 || true
+
+  module_logs_enabled=0
+  case "$PROFILE" in
+    extended|debug) module_logs_enabled=1 ;;
+  esac
+  [ "${PBW_COLLECT_MODULE_LOGS:-0}" = "1" ] && module_logs_enabled=1
+  echo "module_runtime_logs_enabled=$module_logs_enabled" >> "$RUN/module_runtime/known_modules.txt"
+
+  if [ "$module_logs_enabled" != "1" ]; then
+    log "module_runtime_logs_content_skipped profile=$PROFILE pbw_collect_module_logs=${PBW_COLLECT_MODULE_LOGS:-0}"
+    return 0
+  fi
+
+  for f in kernel_tweaks.log ram.log services.log; do
+    tail_file "/data/adb/modules/Frosty/logs/$f" "$RUN/module_runtime/frosty/$f.txt" 600
+  done
+
+  for f in kmsg.log props.txt; do
+    tail_file "/data/adb/lspd/log.old/$f" "$RUN/module_runtime/lsposed_log_old/$f.txt" 600
+  done
+  old_modules="$(find /data/adb/lspd/log.old -maxdepth 1 -type f -name 'modules_*.log' 2>/dev/null | sort | tail -1)"
+  old_verbose="$(find /data/adb/lspd/log.old -maxdepth 1 -type f -name 'verbose_*.log' 2>/dev/null | sort | tail -1)"
+  [ -n "$old_modules" ] && tail_file "$old_modules" "$RUN/module_runtime/lsposed_log_old/$(basename "$old_modules").txt" 600
+  [ -n "$old_verbose" ] && tail_file "$old_verbose" "$RUN/module_runtime/lsposed_log_old/$(basename "$old_verbose").txt" 600
+}
 collect_ashlooper_health
+collect_module_runtime_logs
 run_file "$RUN/dispatcher/pixel_drop_dispatch_status.txt" "if [ -d /data/adb/pixel-drop-dispatch ]; then find /data/adb/pixel-drop-dispatch -maxdepth 3 -type f -name '*.log' 2>/dev/null | sort | tail -30; echo; tail -160 /data/adb/pixel-drop-dispatch/log/health.log 2>/dev/null || tail -160 /data/adb/pixel-drop-dispatch/health.log 2>/dev/null || true; echo; tail -160 /data/adb/pixel-drop-dispatch/log/dispatch.log 2>/dev/null || tail -160 /data/adb/pixel-drop-dispatch/dispatch.log 2>/dev/null || true; else echo runtime_present=no; fi"
 run_file "$RUN/thermal/thermal_power.txt" "dumpsys battery 2>/dev/null | head -160 || true; echo; dumpsys thermalservice 2>/dev/null | head -220 || true; echo; dumpsys power 2>/dev/null | head -220 || true; getprop | grep -i thermal || true"
 run_file "$RUN/network/local_status.txt" "ip addr 2>/dev/null || true; echo; ip route 2>/dev/null || true; echo; ip rule 2>/dev/null || true; echo; getprop | grep -Ei 'net.dns|wifi|radio|telephony' || true; echo; dumpsys connectivity 2>/dev/null | head -220 || true; echo; dumpsys wifi 2>/dev/null | head -220 || true"
@@ -296,6 +349,9 @@ anr_count="$(find "$RUN/anr" -type f 2>/dev/null | wc -l | tr -d ' ')"
 tomb_count="$(find "$RUN/tombstones" -type f 2>/dev/null | wc -l | tr -d ' ')"
 drop_count="$(find "$RUN/dropbox" -type f 2>/dev/null | wc -l | tr -d ' ')"
 ash_count="$(find "$RUN/rescue/ashlooper_logs" -type f 2>/dev/null | wc -l | tr -d ' ')"
+module_runtime_count="$(find "$RUN/module_runtime" -type f 2>/dev/null | wc -l | tr -d ' ')"
+frosty_log_count="$(find "$RUN/module_runtime/frosty" -type f 2>/dev/null | wc -l | tr -d ' ')"
+lsposed_old_log_count="$(find "$RUN/module_runtime/lsposed_log_old" -type f 2>/dev/null | wc -l | tr -d ' ')"
 ashlooper_present="$(grep -E '^ashlooper_present=' "$RUN/rescue/ashlooper_health.txt" 2>/dev/null | tail -1 | cut -d= -f2-)"
 ashlooper_version="$(grep -E '^version=' "$RUN/rescue/ashlooper_health.txt" 2>/dev/null | head -1 | cut -d= -f2-)"
 {
@@ -321,6 +377,9 @@ ashlooper_version="$(grep -E '^version=' "$RUN/rescue/ashlooper_health.txt" 2>/d
   echo "ashlooper_version=${ashlooper_version:-unknown}"
   echo "ashlooper_logs_found=$ash_count"
   echo "ashrexcue_safe_files=$ash_count"
+  echo "module_runtime_files=$module_runtime_count"
+  echo "frosty_log_files=$frosty_log_count"
+  echo "lsposed_old_log_files=$lsposed_old_log_count"
   echo "logd_state_before=$logd_before"
   echo "logd_started_by_bootwatch=$LOGD_STARTED_BY_PBW"
   echo "logd_was_stopped=$LOGD_WAS_STOPPED"
