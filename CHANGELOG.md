@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Document ReZygisk / Treat Wheel / Vector as a dedicated Zygisk-stack vNext collector target.
+- Clarify that the next implementation should use a gated `extended` profile, keeping v0.2.4 `standard` behavior unchanged.
+
 ## 2026-06-06 - README log coverage and vNext plan
 
 - Documented current Boot Watch Collector v0.2.4 log/evidence coverage in README.

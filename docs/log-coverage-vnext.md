@@ -59,3 +59,61 @@ Boot Watch Collector is bounded, local-only, and exits after collection. It prod
 - No deep LSPosed database dumps by default.
 - No app private data collection except explicit future opt-in package focus.
 - Keep all result files local and protected with `pixel_local__*` naming.
+
+<!-- ZYGISK_STACK_TREAT_WHEEL_VECTOR_VNEXT_20260606_START -->
+## Zygisk-stack vNext: ReZygisk, Treat Wheel and Vector
+
+Context:
+
+- ReZygisk is a standalone Zygisk API implementation for KernelSU, APatch and Magisk.
+- Treat Wheel is designed for ReZygisk-based setups and has a ReVanced Umount (`RVU`) flow using per-module `tw_config` files.
+- Vector is an ART hooking framework running as a Zygisk module and is relevant to LSPosed/libxposed-style troubleshooting.
+
+Current v0.2.4 already provides useful indirect signal:
+
+- Magisk module matrix and marker state.
+- Zygisk/ART mountinfo focus.
+- dex2oat overlay checks.
+- `lspd` status and latest LSPosed logs.
+- logcat/dmesg patterns for Zygisk, ReZygisk, dex2oat, SafetyCore, permission denials and ART/hooking red flags.
+
+Not yet ideal:
+
+- No dedicated ReZygisk summary file.
+- No Treat Wheel / `tw_config` inventory.
+- No Vector-specific summary file.
+- No combined Zygisk-stack health line in `summary.txt` or `status.env`.
+
+Proposed v0.2.5/vNext implementation plan:
+
+1. Add `extended` profile only; leave `standard` unchanged.
+2. Create `$RUN/zygisk_stack/`.
+3. Add `zygisk_stack/summary.txt` with machine-readable keys:
+   - `zygisk_stack_rezygisk_present=`
+   - `zygisk_stack_rezygisk_conflict_hint=`
+   - `zygisk_stack_treat_wheel_present=`
+   - `zygisk_stack_treat_wheel_tw_config_count=`
+   - `zygisk_stack_vector_present=`
+   - `zygisk_stack_vector_red_flags=`
+   - `zygisk_stack_lspd_present=`
+   - `zygisk_stack_overall=`
+4. Add bounded status files:
+   - `rezygisk_status.txt`
+   - `treat_wheel_status.txt`
+   - `vector_status.txt`
+   - `lsposed_status.txt`
+5. Add safe discovery patterns:
+   - module metadata from `/data/adb/modules/*/module.prop`
+   - bounded status/log files under known module runtime paths
+   - `tw_config` files from module folders, with hard line limits
+   - logcat/dmesg red-flag extraction using already bounded collectors
+6. Add export snippets to protected result text.
+7. Add summary keys to `pixel_local__boot-watch-status.env` only after the collector is proven stable.
+
+Explicit non-goals:
+
+- Do not dump LSPosed SQLite databases by default.
+- Do not collect app-private data.
+- Do not modify Magisk/ReZygisk/Vector/Treat Wheel settings.
+- Do not run full bugreport automatically.
+<!-- ZYGISK_STACK_TREAT_WHEEL_VECTOR_VNEXT_20260606_END -->
