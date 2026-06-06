@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.2.4
+
+- Fix runtime versionCode metadata mismatch from v0.2.3.
+- Align `boot-watch.sh` exported `VERSION_CODE` with `module.prop` and `update.json`.
+- Keep active marker self-heal and auto-export behavior unchanged.
+
+
 ## v0.2.3
 
 - Fix service-time active marker regression from v0.2.2.

@@ -1,20 +1,20 @@
-# Boot Watch Collector v0.2.3
+# Boot Watch Collector v0.2.4
 
-v0.2.3 is a focused stability fix for the service-time active marker guard.
+v0.2.4 is a focused metadata fix for the v0.2.3 runtime export.
 
 ## Fixed
 
-- Corrected `service.sh` so it no longer marks `/data/adb/modules/boot-watch` with `disable` and `remove`.
-- Legacy cleanup is scoped to `/data/adb/modules/pixel-boot-watch` only.
-- Added service-time active self-heal that removes accidental `disable` and `remove` markers from the active `boot-watch` module.
-- Kept the v0.2.1+ automatic boot result export path intact.
+- Corrected `boot-watch.sh` so `VERSION_CODE=24` is exported consistently.
+- Aligns `module.prop`, `update.json`, result marker, and `pixel_local__boot-watch-status.env`.
+- Keeps the v0.2.3 active-module marker self-heal unchanged.
+- Keeps the v0.2.1+ automatic boot result export path intact.
 
 ## Expected post-reboot state
 
 - `id=boot-watch`
-- `version=0.2.3`
-- `versionCode=23`
+- `version=0.2.4`
+- `versionCode=24`
 - `new_disable=absent`
 - `new_remove=absent`
-- `auto_export_rc=0`
+- `pbw_versionCode=24`
 - `pbw_result=PASS`
