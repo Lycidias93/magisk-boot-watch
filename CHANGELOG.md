@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+
+- Fixed `update.json` changelog metadata to use raw Markdown instead of a GitHub HTML release page.
 - Document ReZygisk / Treat Wheel / Vector as a dedicated Zygisk-stack vNext collector target.
 - Clarify that the next implementation should use a gated `extended` profile, keeping v0.2.4 `standard` behavior unchanged.
 
