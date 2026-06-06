@@ -83,6 +83,31 @@ The current release intentionally avoids heavy full-device dumps. Good vNext can
 
 Proposed vNext direction: keep `standard` profile as-is, add `extended` for bounded extra diagnostics, and add `profile.env`/Action selection so heavy or privacy-sensitive collectors remain opt-in.
 
+
+<!-- ZYGISK_STACK_TREAT_WHEEL_VECTOR_VNEXT_20260606_START -->
+## Zygisk stack / Treat Wheel / Vector vNext focus
+
+The current `standard` profile already captures Magisk module state, Zygisk/ART/LSPosed focus data, `lspd` status/logs, dex2oat overlays, logcat/dmesg red flags, ANR/tombstone/dropbox evidence, and the protected boot result export.
+
+For the next collector step, keep the current default profile stable and add a gated `extended` Zygisk-stack summary for setups that use ReZygisk, Treat Wheel, Vector, LSPosed, or similar ART/Zygisk hooking layers.
+
+| Component | Current coverage | vNext extended collector target |
+| --- | --- | --- |
+| ReZygisk | Covered indirectly through module matrix, Zygisk mountinfo, logcat pattern matching, dex2oat overlay focus, and generic module state. | Add a dedicated `zygisk_stack/rezygisk_status.txt` summary: module presence, module metadata, daemon/process hints, Magisk built-in Zygisk conflict hints, and bounded ReZygisk log/status file discovery. |
+| Treat Wheel | Covered indirectly through module matrix and Zygisk/logcat red flags. | Add `zygisk_stack/treat_wheel_status.txt`: module metadata, ReZygisk dependency hint, bounded `tw_config` discovery for ReVanced modules, RVU/umount signal checks, and red-flag extraction. |
+| Vector | Covered indirectly through module matrix, Zygisk/ART mountinfo, LSPosed/lspd focus, and logcat patterns. | Add `zygisk_stack/vector_status.txt`: module metadata, ART hooking/mount/process hints, LSPlant/libxposed/Vector red-flag extraction, and bounded module log discovery. |
+| LSPosed/lspd | `lspd` status, latest LSPosed logs, ART/dexopt checks. | Add an allowlisted config/status summary only; no database dumps by default. |
+
+Risk guard for vNext:
+
+- `standard` profile stays unchanged.
+- `extended` profile remains bounded by file count, line count and known safe paths.
+- No LSPosed database dumps by default.
+- No app private data collection.
+- No root-manager setting changes; Boot Watch observes only.
+- Full bugreport remains manual/opt-in only.
+<!-- ZYGISK_STACK_TREAT_WHEEL_VECTOR_VNEXT_20260606_END -->
+
 ## Install
 
 Flash `magisk-boot-watch-v0.2.4.zip` in Magisk, reboot, then check the protected result logs in Download.
