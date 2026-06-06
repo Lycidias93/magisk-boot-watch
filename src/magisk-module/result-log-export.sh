@@ -110,6 +110,11 @@ mv -f "$STATUS_TMP" "$STATUS"
   sed -n '1,220p' "$RUN/zygisk/dex2oat_overlay.txt" 2>/dev/null || true
   sed -n '1,220p' "$RUN/art/package_dexopt.txt" 2>/dev/null || true
   echo
+  echo "## module runtime logs"
+  sed -n '1,260p' "$RUN/module_runtime/known_modules.txt" 2>/dev/null || echo "missing_module_runtime_summary=yes"
+  echo
+  find "$RUN/module_runtime" -type f 2>/dev/null | sort | sed -n '1,120p' || true
+  echo
   echo "## storage pressure"
   sed -n '1,180p' "$RUN/storage/storage_plus_240s.txt" 2>/dev/null || sed -n '1,180p' "$RUN/storage/storage_plus_90s.txt" 2>/dev/null || true
   echo

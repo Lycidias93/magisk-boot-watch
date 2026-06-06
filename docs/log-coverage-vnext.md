@@ -43,6 +43,23 @@ Boot Watch Collector is bounded, local-only, and exits after collection. It prod
 
 ## vNext plan
 
+<!-- MODULE_RUNTIME_LOGS_VNEXT_START -->
+## Module runtime log discovery follow-up
+
+Pixel discovery identified the following bounded candidates:
+
+| Source | Observed files | vNext handling |
+| --- | --- | --- |
+| Frosty | `/data/adb/modules/Frosty/logs/kernel_tweaks.log`, `ram.log`, `services.log` | `extended` profile bounded tails. |
+| LSPosed/lspd current logs | `/data/adb/lspd/log/kmsg.log`, `props.txt`, `modules_*.log`, `verbose_*.log` | Already covered by current LSPosed log copy; keep bounded in result summaries. |
+| LSPosed/lspd rotated logs | `/data/adb/lspd/log.old/kmsg.log`, `props.txt`, `modules_*.log`, `verbose_*.log` | `extended` profile bounded tails for post-reboot regression context. |
+| ReZygisk / Treat Wheel / Vector / Zygisk Detach | No dedicated runtime log files observed in the report excerpt | Status-only until real log paths are observed. |
+| Tricky Store / Play Integrity Fix / Anti SafetyCore / RVMM mount | No dedicated runtime log files observed in the report excerpt | Status-only; avoid sensitive/private dumps. |
+
+Collector rule: module-owned log contents are not copied in `standard` by default. They are gated behind `extended` or `PBW_COLLECT_MODULE_LOGS=1`, use hardcoded allowlists, and use bounded tails only.
+<!-- MODULE_RUNTIME_LOGS_VNEXT_END -->
+
+
 1. Keep `standard` profile stable and unchanged by default.
 2. Add `extended` profile for bounded additional diagnostics.
 3. Add explicit profile selection through config/action flow.

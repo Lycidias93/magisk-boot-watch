@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Add opt-in extended module-runtime log collectors for Frosty logs and rotated LSPosed/lspd logs, keeping standard profile unchanged.
 
 - Fixed `update.json` changelog metadata to use raw Markdown instead of a GitHub HTML release page.
 - Document ReZygisk / Treat Wheel / Vector as a dedicated Zygisk-stack vNext collector target.
