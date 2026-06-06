@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-06-06 - README log coverage and vNext plan
+
+- Documented current Boot Watch Collector v0.2.4 log/evidence coverage in README.
+- Added a public vNext candidate list for additional bounded diagnostics.
+- Added `docs/log-coverage-vnext.md` with the detailed coverage and risk plan.
+
 ## v0.2.4
 
 - Fix runtime versionCode metadata mismatch from v0.2.3.
