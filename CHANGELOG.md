@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+
+## v0.2.5-test.1 - 2026-06-07
+
+- Test prerelease for opt-in `extended` module runtime log collectors.
+- Adds bounded Frosty log tails and LSPosed/lspd `log.old` tails when `PBW_PROFILE=extended` or `PBW_COLLECT_MODULE_LOGS=1`.
+- Keeps stable `update.json` on v0.2.4; this test ZIP is manual/pre-release only.
+- Fixes `action.sh --status` module id output from the old `pixel-boot-watch` label to `boot-watch`.
+
 - Document runtime proof for the extended module runtime log collector; test passed with `db_leak=absent` and stable scripts restored.
 - Add opt-in extended module-runtime log collectors for Frosty logs and rotated LSPosed/lspd logs, keeping standard profile unchanged.
 
