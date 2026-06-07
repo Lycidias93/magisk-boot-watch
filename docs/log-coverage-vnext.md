@@ -149,3 +149,16 @@ See `docs/module-runtime-logs-extended-test-20260606.md` for the full proof.
 - The stable `update.json` intentionally remains on v0.2.4 until the extended collector has another post-install/post-reboot proof.
 - `standard` profile behavior remains unchanged.
 - `extended` profile or `PBW_COLLECT_MODULE_LOGS=1` enables bounded Frosty and LSPosed/lspd rotated log tails.
+
+## Installed v0.2.5-test.1 proof
+
+The `v0.2.5-test.1` prerelease is installed-validated on Pixel:
+
+- standard post-reboot run: `PASS`, `profile=standard`, `module_runtime_logs_enabled=0`
+- installed extended run: `PASS`, `profile=extended`, `module_runtime_logs_enabled=1`
+- collected Frosty bounded tails: `3`
+- collected LSPosed/lspd rotated bounded tails: `4`
+- LSPosed DB leak guard: `db_leak=absent`
+- file-name-too-long guard: `absent`
+
+See [`v0.2.5-test.1-post-reboot-and-extended-proof-20260608.md`](./v0.2.5-test.1-post-reboot-and-extended-proof-20260608.md).

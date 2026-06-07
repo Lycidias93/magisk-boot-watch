@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.2.5-test.1 installed proof - 2026-06-08
+
+- Documented installed Pixel post-reboot standard PASS for `v0.2.5-test.1`.
+- Documented installed extended module-runtime PASS with Frosty logs and LSPosed/lspd rotated logs.
+- Confirmed `db_leak=absent` for LSPosed DB guard and `file_name_too_long=absent`.
+
 ## Unreleased
 
 
