@@ -9,7 +9,7 @@ mkdir -p "$RT" "$DL"
 
 if [ "${1:-}" = "--status" ]; then
   echo "mode=status"
-  echo "module=pixel-boot-watch"
+  echo "module=boot-watch"
   grep -E '^(id|name|version|versionCode|description)=' "$MODDIR/module.prop" 2>/dev/null || true
   for f in "$LAST" "$ACTION" "$STATUS"; do
     if [ -f "$f" ]; then

@@ -141,3 +141,11 @@ Status: PASS on 2026-06-06 after PR #11 (`8d3cf1a`).
 The extended collector was verified with `PBW_PROFILE=extended` and `module_runtime_logs_enabled=1`. It collected bounded Frosty logs and LSPosed/lspd `log.old` files, produced `verify_extended_runtime=pass`, and confirmed `db_leak=absent`. The active stable scripts were restored after the test.
 
 See `docs/module-runtime-logs-extended-test-20260606.md` for the full proof.
+
+
+## v0.2.5-test.1 packaging note
+
+- `v0.2.5-test.1` is a manual prerelease ZIP, not a stable update-channel rollout.
+- The stable `update.json` intentionally remains on v0.2.4 until the extended collector has another post-install/post-reboot proof.
+- `standard` profile behavior remains unchanged.
+- `extended` profile or `PBW_COLLECT_MODULE_LOGS=1` enables bounded Frosty and LSPosed/lspd rotated log tails.
