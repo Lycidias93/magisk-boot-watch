@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Document runtime proof for the extended module runtime log collector; test passed with `db_leak=absent` and stable scripts restored.
 - Add opt-in extended module-runtime log collectors for Frosty logs and rotated LSPosed/lspd logs, keeping standard profile unchanged.
 
 - Fixed `update.json` changelog metadata to use raw Markdown instead of a GitHub HTML release page.

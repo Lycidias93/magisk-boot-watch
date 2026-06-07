@@ -134,3 +134,10 @@ Explicit non-goals:
 - Do not modify Magisk/ReZygisk/Vector/Treat Wheel settings.
 - Do not run full bugreport automatically.
 <!-- ZYGISK_STACK_TREAT_WHEEL_VECTOR_VNEXT_20260606_END -->
+## Runtime proof: extended module runtime logs
+
+Status: PASS on 2026-06-06 after PR #11 (`8d3cf1a`).
+
+The extended collector was verified with `PBW_PROFILE=extended` and `module_runtime_logs_enabled=1`. It collected bounded Frosty logs and LSPosed/lspd `log.old` files, produced `verify_extended_runtime=pass`, and confirmed `db_leak=absent`. The active stable scripts were restored after the test.
+
+See `docs/module-runtime-logs-extended-test-20260606.md` for the full proof.

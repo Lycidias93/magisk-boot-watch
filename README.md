@@ -146,3 +146,6 @@ This release fixes service-time active marker cleanup so the active `boot-watch`
 ## v0.2.4 versionCode metadata fix
 
 This release aligns the runtime `pbw_versionCode` export with `module.prop` and `update.json` while keeping the active marker self-heal and auto-export path intact.
+### Extended module runtime log test proof
+
+The vNext extended module runtime collector was locally runtime-tested on Pixel on 2026-06-06 after PR #11. The test passed with `PBW_PROFILE=extended`, collected bounded Frosty logs and LSPosed/lspd rotated logs, and verified `db_leak=absent`. Standard profile behavior remains unchanged. See `docs/module-runtime-logs-extended-test-20260606.md`.
