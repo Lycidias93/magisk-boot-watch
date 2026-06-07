@@ -8,15 +8,15 @@ No daemon. No network upload. No telemetry.
 
 ## Current release
 
-- Version: `v0.2.4`
+- Version: `v0.2.5`
+- VersionCode: `26`
 - Module id: `boot-watch`
 - Runtime path: `/data/adb/boot-watch`
 - Online update metadata: [`update.json`](./update.json)
-- Release ZIP: `magisk-boot-watch-v0.2.4.zip`
-- Latest test release: `v0.2.5-test.1` is installed-validated on Pixel with standard post-reboot PASS and installed extended module-runtime PASS; stable auto-update remains `v0.2.4`.
-- Latest test prerelease: `v0.2.5-test.1` / `magisk-boot-watch-v0.2.5-test.1.zip` manual install only.
-- Test scope: opt-in `extended` module runtime log collector for Frosty logs and LSPosed/lspd rotated logs; stable `update.json` remains on v0.2.4.
-- Verified status: Pixel post-reboot PASS with `pbw_result=PASS`, `pbw_version=0.2.4`, `pbw_versionCode=24`, and no active `disable`/`remove` marker.
+- Release ZIP: `magisk-boot-watch-v0.2.5.zip`
+- Stable status: promoted from `v0.2.5-test.1` after Pixel installed validation.
+- Verified status: standard post-reboot PASS plus installed extended profile PASS with `module_runtime_logs_enabled=1`, `frosty_log_files=3`, `lsposed_old_log_files=4`, `db_leak=absent`, and no file-name-too-long regression.
+- Standard profile remains bounded and unchanged for foreign module log contents; extended module runtime logs remain opt-in.
 
 ## Migration from v0.1.x
 
@@ -31,7 +31,7 @@ When a v0.2.x release is flashed, it marks the legacy `pixel-boot-watch` module 
 
 ## Result files
 
-On Pixel/Termux setups using Sortify protected names, v0.2.4 writes protected result logs such as:
+On Pixel/Termux setups using Sortify protected names, v0.2.5 writes protected result logs such as:
 
 ```text
 /storage/emulated/0/Download/pixel_local__boot-watch-<run_id>-result.txt
@@ -52,7 +52,7 @@ Boot Watch Collector is bounded and local-only. It captures snapshots after boot
 | Boot/core state | Time, uptime, uid, SELinux mode, boot-completed props, boot reason, verified boot state, slot suffix, build fingerprint, Android release/SDK, focused boot/debug/system props. |
 | Magisk | `magisk -V`, `magisk -v`, `/data/adb/magisk.log`, `/cache/magisk.log`, module matrix with `id`, `name`, `version`, `versionCode`, `disable`, `remove`, `service.sh`, `post-fs-data.sh`, and `action.sh`. |
 | Magisk service scripts | `/data/adb/service.d` and `/data/adb/post-fs-data.d` listing plus quick shell syntax checks. |
-| Zygisk / ART / LSPosed | Mountinfo focus for Zygisk/Vector/ReZygisk/LSPosed/ART, dex2oat overlay check, `lspd` service status, latest LSPosed logs, ART dexopt/staged-session status, SafetyCore/GMS/GSF/Vending package paths. In vNext code, rotated LSPosed/lspd logs are prepared as bounded `extended` profile tails. |
+| Zygisk / ART / LSPosed | Mountinfo focus for Zygisk/Vector/ReZygisk/LSPosed/ART, dex2oat overlay check, `lspd` service status, latest LSPosed logs, ART dexopt/staged-session status, SafetyCore/GMS/GSF/Vending package paths. In v0.2.5, rotated LSPosed/lspd logs are available as bounded opt-in `extended` profile tails. |
 | Binder/service health | `service check` for settings/package/activity/power/dropbox, focused service list, selected safe-volume and SafetyCore checks. |
 | Audio safe-volume state | Audio safe-volume service marker and selected global audio safe-volume/CSD settings. |
 | AshLooper / AshReXcue | Module presence, version, marker state, service/action scripts, selected config/state/status props, bounded candidate file list, and up to 10 bounded health/log excerpts. |
@@ -79,7 +79,7 @@ The current release intentionally avoids heavy full-device dumps. Good vNext can
 | `dumpsys meminfo` focused summary | Better memory pressure triage than `free`/PSI alone. | Medium; bound total and avoid per-app deep dumps by default. |
 | `dumpsys jobscheduler` / `alarm` / `deviceidle` | Useful for post-boot delayed jobs, idle restrictions, and wake behavior. | Medium; bound output. |
 | SurfaceFlinger / WindowManager / input | Useful for black screen, lockscreen, keyboard, touch, or UI boot issues. | Medium; collect only focused summaries. |
-| Magisk per-module runtime logs | Current module matrix shows state. vNext code adds an opt-in extended allowlist for Frosty `logs/kernel_tweaks.log`, `logs/ram.log`, and `logs/services.log`; other Zygisk-stack modules remain status-only until real log paths are observed. | Medium; keep bounded by module allowlist, max lines, and profile gate. |
+| Magisk per-module runtime logs | Current module matrix shows state. v0.2.5 adds an opt-in extended allowlist for Frosty `logs/kernel_tweaks.log`, `logs/ram.log`, and `logs/services.log`; other Zygisk-stack modules remain status-only until real log paths are observed. | Medium; keep bounded by module allowlist, max lines, and profile gate. |
 | LSPosed module/config snapshot | Useful for module activation and scope issues. | Medium-high; avoid DB dumps by default, use allowlisted summaries only. |
 | App-specific package focus | Targeted package state for SafetyCore, banking, TAN, PixelXpert, etc. | Medium-high; opt-in package allowlist only. |
 | Optional full bugreport handoff | Maximum context for rare issues. | High/heavy/privacy-sensitive; never default. |
