@@ -13,6 +13,7 @@ No daemon. No network upload. No telemetry.
 - Runtime path: `/data/adb/boot-watch`
 - Online update metadata: [`update.json`](./update.json)
 - Release ZIP: `magisk-boot-watch-v0.2.4.zip`
+- Latest test release: `v0.2.5-test.1` is installed-validated on Pixel with standard post-reboot PASS and installed extended module-runtime PASS; stable auto-update remains `v0.2.4`.
 - Latest test prerelease: `v0.2.5-test.1` / `magisk-boot-watch-v0.2.5-test.1.zip` manual install only.
 - Test scope: opt-in `extended` module runtime log collector for Frosty logs and LSPosed/lspd rotated logs; stable `update.json` remains on v0.2.4.
 - Verified status: Pixel post-reboot PASS with `pbw_result=PASS`, `pbw_version=0.2.4`, `pbw_versionCode=24`, and no active `disable`/`remove` marker.

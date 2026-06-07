@@ -48,3 +48,12 @@ pbw_versionCode=25
 ```
 
 For extended collection, run with an explicit extended profile/test flow; normal boot collection should remain standard unless configured otherwise.
+
+## Installed validation update — 2026-06-08
+
+- Pixel post-reboot standard profile: PASS (`pbw_result=PASS`, `pbw_version=0.2.5-test.1`, `pbw_versionCode=25`).
+- Installed extended manual profile: PASS (`profile=extended`, `module_runtime_logs_enabled=1`).
+- Frosty bounded tails collected: 3.
+- LSPosed/lspd rotated bounded tails collected: 4.
+- LSPosed DB leak guard: `db_leak=absent`.
+- File-name-too-long guard: `absent`.
