@@ -162,3 +162,20 @@ The `v0.2.5-test.1` prerelease is installed-validated on Pixel:
 - file-name-too-long guard: `absent`
 
 See [`v0.2.5-test.1-post-reboot-and-extended-proof-20260608.md`](./v0.2.5-test.1-post-reboot-and-extended-proof-20260608.md).
+
+<!-- V025_STABLE_PROMOTION_20260608 -->
+
+## v0.2.5 stable promotion — 2026-06-08
+
+`v0.2.5` promotes the previously validated `v0.2.5-test.1` extended module runtime collector to the stable update channel.
+
+Validation baseline:
+
+- Standard post-reboot run: PASS.
+- Installed extended profile run: PASS.
+- Frosty bounded tails: 3.
+- LSPosed/lspd rotated bounded tails: 4.
+- LSPosed DB leak guard: `db_leak=absent`.
+- File-name-too-long guard: `absent`.
+
+The `standard` profile remains bounded and unchanged for foreign module log contents; Frosty/LSPosed runtime log content collection remains gated by `PBW_PROFILE=extended`, `PBW_PROFILE=debug`, or `PBW_COLLECT_MODULE_LOGS=1`.

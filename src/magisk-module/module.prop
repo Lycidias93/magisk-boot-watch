@@ -1,7 +1,7 @@
 id=boot-watch
 name=Boot Watch Collector
-version=0.2.5-test.1
-versionCode=25
+version=0.2.5
+versionCode=26
 author=Lycidias93 / ChatGPT
 updateJson=https://raw.githubusercontent.com/Lycidias93/magisk-boot-watch/main/update.json
-description=Boot Watch Collector v0.2.5-test.1 prerelease with opt-in extended module runtime log collection for Frosty logs and LSPosed/lspd rotated logs.
+description=Boot Watch Collector v0.2.5 stable with standard boot evidence collection and opt-in extended module runtime logs for Frosty and LSPosed/lspd rotated logs.

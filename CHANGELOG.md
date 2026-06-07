@@ -1,5 +1,14 @@
 # Changelog
 
+
+## v0.2.5 - 2026-06-08
+
+- Promoted `v0.2.5` stable after installed `v0.2.5-test.1` validation on Pixel.
+- Enabled stable online update metadata with `versionCode=26` and release asset `magisk-boot-watch-v0.2.5.zip`.
+- Kept `standard` profile bounded and unchanged for foreign module log contents.
+- Added opt-in `extended` module runtime tails for Frosty logs and LSPosed/lspd rotated logs.
+- Preserved privacy guards: no LSPosed DB dumps, no app-private data, and installed proof showed `db_leak=absent` plus `file_name_too_long=absent`.
+
 ## v0.2.5-test.1 installed proof - 2026-06-08
 
 - Documented installed Pixel post-reboot standard PASS for `v0.2.5-test.1`.
