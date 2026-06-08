@@ -152,3 +152,7 @@ This release aligns the runtime `pbw_versionCode` export with `module.prop` and 
 ### Extended module runtime log test proof
 
 The vNext extended module runtime collector was locally runtime-tested on Pixel on 2026-06-06 after PR #11. The test passed with `PBW_PROFILE=extended`, collected bounded Frosty logs and LSPosed/lspd rotated logs, and verified `db_leak=absent`. Standard profile behavior remains unchanged. See `docs/module-runtime-logs-extended-test-20260606.md`.
+
+## License
+
+This project is licensed under the MIT License. See [LICENSE](./LICENSE).
