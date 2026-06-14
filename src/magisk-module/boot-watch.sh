@@ -1,12 +1,12 @@
 #!/system/bin/sh
-# Boot Watch Collector v0.2.5 comprehensive one-shot collector
+# Boot Watch Collector v0.2.6-test.1 comprehensive one-shot collector
 # Bounded, local-only, no daemon after completion.
 
 MOD="/data/adb/modules/boot-watch"
 RT="/data/adb/boot-watch"
 DL="/storage/emulated/0/Download"
-VERSION="0.2.5"
-VERSION_CODE="26"
+VERSION="0.2.6-test.1"
+VERSION_CODE="27"
 PROFILE="${PBW_PROFILE:-standard}"
 MAX_SECONDS="${PBW_MAX_SECONDS:-360}"
 MAX_FILES="${PBW_MAX_FILES:-80}"
@@ -167,7 +167,7 @@ if [ "$logd_before" = "stopped" ]; then
 fi
 
 stage "static_core"
-mkdir -p "$RUN/boot" "$RUN/magisk" "$RUN/modules" "$RUN/zygisk" "$RUN/lsposed" "$RUN/art" "$RUN/binder" "$RUN/audio_safe" "$RUN/rescue" "$RUN/module_runtime" "$RUN/dispatcher" "$RUN/thermal" "$RUN/power" "$RUN/network" "$RUN/service_d" "$RUN/storage" "$RUN/memory" "$RUN/kernel" "$RUN/logcat" "$RUN/anr" "$RUN/tombstones" "$RUN/dropbox"
+mkdir -p "$RUN/boot" "$RUN/magisk" "$RUN/modules" "$RUN/zygisk" "$RUN/lsposed" "$RUN/art" "$RUN/binder" "$RUN/audio_safe" "$RUN/rescue" "$RUN/ashlooper_intervention" "$RUN/pstore" "$RUN/dumpsys" "$RUN/module_runtime" "$RUN/dispatcher" "$RUN/thermal" "$RUN/power" "$RUN/network" "$RUN/service_d" "$RUN/storage" "$RUN/memory" "$RUN/kernel" "$RUN/logcat" "$RUN/logcat_split" "$RUN/anr" "$RUN/tombstones" "$RUN/dropbox"
 
 run_file "$RUN/boot/core.txt" "date -Is; uptime; id; getenforce 2>/dev/null || true; getprop sys.boot_completed; getprop dev.bootcomplete; getprop ro.boot.bootreason; getprop ro.boot.verifiedbootstate; getprop ro.boot.flash.locked; getprop ro.boot.vbmeta.device_state; getprop ro.boot.slot_suffix; getprop ro.build.fingerprint; getprop ro.build.version.release; getprop ro.build.version.sdk"
 run_file "$RUN/boot/props_focus.txt" "getprop | grep -Ei 'boot|zygisk|magisk|dex2oat|art|thermal|wifi|radio|telephony|net.dns|lmk|memory|safety|debug' | head -n $MAX_LINES"
@@ -241,6 +241,157 @@ collect_ashlooper_health() {
   done
 }
 
+
+collect_ashlooper_intervention() {
+  stage "ashlooper_intervention"
+  mkdir -p "$RUN/ashlooper_intervention"
+  summary="$RUN/ashlooper_intervention/summary.txt"
+  disabled="$RUN/ashlooper_intervention/disabled_modules.txt"
+  state="$RUN/ashlooper_intervention/ashlooper_state.txt"
+  disabled_candidates=""
+  disabled_count=0
+  reason_candidate="unknown"
+
+  {
+    echo "disabled_modules_time=$(date +%Y-%m-%dT%H:%M:%S%z)"
+    for d in /data/adb/modules/*; do
+      [ -d "$d" ] || continue
+      mid="$(basename "$d")"
+      disable_state=absent
+      remove_state=absent
+      disable_mtime=""
+      remove_mtime=""
+      [ -e "$d/disable" ] && disable_state=present && disable_mtime="$(date -r "$d/disable" +%Y-%m-%dT%H:%M:%S%z 2>/dev/null || true)"
+      [ -e "$d/remove" ] && remove_state=present && remove_mtime="$(date -r "$d/remove" +%Y-%m-%dT%H:%M:%S%z 2>/dev/null || true)"
+      if [ "$disable_state" = "present" ] || [ "$remove_state" = "present" ]; then
+        echo "--- module=$mid ---"
+        grep -E '^(id|name|version|versionCode|description)=' "$d/module.prop" 2>/dev/null || true
+        echo "disable=$disable_state"
+        echo "disable_mtime=$disable_mtime"
+        echo "remove=$remove_state"
+        echo "remove_mtime=$remove_mtime"
+      fi
+    done
+  } > "$disabled" 2>&1 || true
+
+  {
+    echo "ashlooper_state_time=$(date +%Y-%m-%dT%H:%M:%S%z)"
+    for f in \
+      /data/adb/modules/AshLooper/settings.prop \
+      /data/adb/modules/AshLooper/config.prop \
+      /data/adb/modules/AshLooper/state.prop \
+      /data/adb/modules/AshLooper/status.prop \
+      /data/adb/ashlooper/tmp_modules.json \
+      /data/adb/ashlooper/module.json; do
+      if [ -f "$f" ]; then
+        echo "--- $f ---"
+        sed -n '1,220p' "$f" 2>/dev/null || true
+      fi
+    done
+  } > "$state" 2>&1 || true
+
+  for d in /data/adb/modules/*; do
+    [ -d "$d" ] || continue
+    mid="$(basename "$d")"
+    [ "$mid" = "AshLooper" ] && continue
+    if [ -e "$d/disable" ] || [ -e "$d/remove" ]; then
+      disabled_count=$((disabled_count + 1))
+      if [ -z "$disabled_candidates" ]; then
+        disabled_candidates="$mid"
+      else
+        disabled_candidates="$disabled_candidates,$mid"
+      fi
+    fi
+  done
+
+  case ",$disabled_candidates," in
+    *,ptune,*) reason_candidate="ptune" ;;
+    *,pTune,*) reason_candidate="ptune" ;;
+  esac
+
+  ash_present="no"
+  [ -d /data/adb/modules/AshLooper ] && ash_present="yes"
+
+  intervention_possible="no"
+  logs_missing="no"
+  if [ "$ash_present" = "yes" ] && [ "$disabled_count" -gt 0 ]; then
+    intervention_possible="yes"
+    logs_missing="yes"
+  fi
+  [ -n "$disabled_candidates" ] || disabled_candidates="none"
+  [ "$disabled_candidates" = "none" ] && reason_candidate="none"
+
+  {
+    echo "ashlooper_intervention_time=$(date +%Y-%m-%dT%H:%M:%S%z)"
+    echo "ashlooper_present=$ash_present"
+    echo "ashlooper_intervention_possible=$intervention_possible"
+    echo "ashlooper_disabled_candidates=$disabled_candidates"
+    echo "ashlooper_disabled_count=$disabled_count"
+    echo "ashlooper_reason_candidate=$reason_candidate"
+    echo "module_logs_missing_because_disabled=$logs_missing"
+    echo "disabled_modules_file=$disabled"
+    echo "ashlooper_state_file=$state"
+    echo "note=module disabled before collection is classified as evidence limitation unless AshLooper state explicitly proves cause"
+  } > "$summary" 2>&1 || true
+}
+
+collect_split_logcat() {
+  label="$1"
+  dst="$RUN/logcat_split/$label"
+  mkdir -p "$dst"
+  for buf in main system crash events kernel radio; do
+    run_file "$dst/logcat_${buf}.txt" "logcat -b $buf -d -t 800 2>/dev/null || true"
+  done
+}
+
+collect_pstore() {
+  stage "pstore"
+  mkdir -p "$RUN/pstore/files"
+  {
+    echo "pstore_time=$(date +%Y-%m-%dT%H:%M:%S%z)"
+    if [ -d /sys/fs/pstore ]; then
+      echo "pstore_present=yes"
+      ls -la /sys/fs/pstore 2>/dev/null || true
+    else
+      echo "pstore_present=no"
+    fi
+  } > "$RUN/pstore/summary.txt" 2>&1 || true
+  if [ -d /sys/fs/pstore ]; then
+    find /sys/fs/pstore -maxdepth 1 -type f 2>/dev/null | head -20 | while IFS= read -r f; do
+      base="$(basename "$f" | tr -c 'A-Za-z0-9._-' '_' | cut -c1-72)"
+      h="$(printf '%s' "$f" | sha256sum 2>/dev/null | awk '{print $1}' | cut -c1-12)"
+      [ -n "$h" ] || h="nohash"
+      {
+        echo "source=$f"
+        echo "time=$(date +%Y-%m-%dT%H:%M:%S%z)"
+        echo "---"
+        sed -n '1,260p' "$f" 2>/dev/null || true
+      } > "$RUN/pstore/files/${h}_${base}.txt" 2>&1 || true
+    done
+  fi
+}
+
+collect_focused_dumpsys() {
+  stage "focused_dumpsys"
+  mkdir -p "$RUN/dumpsys"
+  run_file "$RUN/dumpsys/activity_processes.txt" "dumpsys activity processes 2>/dev/null | head -300 || true"
+  run_file "$RUN/dumpsys/activity_services.txt" "dumpsys activity services 2>/dev/null | head -300 || true"
+  run_file "$RUN/dumpsys/activity_providers.txt" "dumpsys activity providers 2>/dev/null | head -260 || true"
+  run_file "$RUN/dumpsys/meminfo_summary.txt" "dumpsys meminfo 2>/dev/null | head -320 || true"
+  run_file "$RUN/dumpsys/jobscheduler.txt" "dumpsys jobscheduler 2>/dev/null | head -320 || true"
+  run_file "$RUN/dumpsys/alarm.txt" "dumpsys alarm 2>/dev/null | head -300 || true"
+  run_file "$RUN/dumpsys/deviceidle.txt" "dumpsys deviceidle 2>/dev/null | head -220 || true"
+  run_file "$RUN/dumpsys/window.txt" "dumpsys window 2>/dev/null | head -260 || true"
+  run_file "$RUN/dumpsys/input.txt" "dumpsys input 2>/dev/null | head -240 || true"
+  run_file "$RUN/dumpsys/surfaceflinger.txt" "dumpsys SurfaceFlinger 2>/dev/null | head -260 || true"
+}
+
+collect_diagnostics_vnext_bundle() {
+  collect_ashlooper_intervention
+  collect_pstore
+  collect_focused_dumpsys
+}
+
 collect_module_runtime_logs() {
   stage "module_runtime_logs"
   mkdir -p "$RUN/module_runtime" "$RUN/module_runtime/frosty" "$RUN/module_runtime/lsposed_log_old"
@@ -293,6 +444,7 @@ collect_module_runtime_logs() {
   [ -n "$old_verbose" ] && tail_file "$old_verbose" "$RUN/module_runtime/lsposed_log_old/$(basename "$old_verbose").txt" 600
 }
 collect_ashlooper_health
+collect_diagnostics_vnext_bundle
 collect_module_runtime_logs
 run_file "$RUN/dispatcher/pixel_drop_dispatch_status.txt" "if [ -d /data/adb/pixel-drop-dispatch ]; then find /data/adb/pixel-drop-dispatch -maxdepth 3 -type f -name '*.log' 2>/dev/null | sort | tail -30; echo; tail -160 /data/adb/pixel-drop-dispatch/log/health.log 2>/dev/null || tail -160 /data/adb/pixel-drop-dispatch/health.log 2>/dev/null || true; echo; tail -160 /data/adb/pixel-drop-dispatch/log/dispatch.log 2>/dev/null || tail -160 /data/adb/pixel-drop-dispatch/dispatch.log 2>/dev/null || true; else echo runtime_present=no; fi"
 run_file "$RUN/thermal/thermal_power.txt" "dumpsys battery 2>/dev/null | head -160 || true; echo; dumpsys thermalservice 2>/dev/null | head -220 || true; echo; dumpsys power 2>/dev/null | head -220 || true; getprop | grep -i thermal || true"
@@ -303,6 +455,7 @@ collect_dynamic() {
   stage "$label"
   run_file "$RUN/logcat/logcat_all_tail_${label}.txt" "logcat -d -t 1200 2>/dev/null || true"
   run_file "$RUN/logcat/logcat_patterns_${label}.txt" "logcat -d -t 1800 2>/dev/null | grep -Ei 'FATAL EXCEPTION|ANR in|Watchdog|system_server|zygote|lspd|zygisk|rezygisk|dex2oat|installd|PackageManager|ActivityManager|lowmemorykiller|LMKD|tombstoned|AshReXcue|bootloop|rescue|XSupport|Lucky|SafetyCore|Permission denied|avc: denied|settings|Failed transaction' | tail -240 || true"
+  collect_split_logcat "$label"
   run_file "$RUN/kernel/dmesg_tail_${label}.txt" "dmesg -T 2>/dev/null | tail -500 || dmesg 2>/dev/null | tail -500 || true"
   run_file "$RUN/kernel/dmesg_patterns_${label}.txt" "dmesg -T 2>/dev/null | grep -Ei 'avc: denied|lmk|lowmemory|panic|fatal|thermal|binder|zygisk|dex2oat|safetycore' | tail -240 || true"
   run_file "$RUN/storage/storage_${label}.txt" "df -h /data /storage/emulated/0 2>/dev/null || true; echo; du -d 1 /storage/emulated/0/Download 2>/dev/null | tail -80 || true; echo; du -x -d 1 /data 2>/dev/null | tail -80 || true"
@@ -354,6 +507,13 @@ frosty_log_count="$(find "$RUN/module_runtime/frosty" -type f 2>/dev/null | wc -
 lsposed_old_log_count="$(find "$RUN/module_runtime/lsposed_log_old" -type f 2>/dev/null | wc -l | tr -d ' ')"
 ashlooper_present="$(grep -E '^ashlooper_present=' "$RUN/rescue/ashlooper_health.txt" 2>/dev/null | tail -1 | cut -d= -f2-)"
 ashlooper_version="$(grep -E '^version=' "$RUN/rescue/ashlooper_health.txt" 2>/dev/null | head -1 | cut -d= -f2-)"
+ashlooper_intervention_possible="$(grep -E '^ashlooper_intervention_possible=' "$RUN/ashlooper_intervention/summary.txt" 2>/dev/null | tail -1 | cut -d= -f2-)"
+ashlooper_disabled_candidates="$(grep -E '^ashlooper_disabled_candidates=' "$RUN/ashlooper_intervention/summary.txt" 2>/dev/null | tail -1 | cut -d= -f2-)"
+ashlooper_reason_candidate="$(grep -E '^ashlooper_reason_candidate=' "$RUN/ashlooper_intervention/summary.txt" 2>/dev/null | tail -1 | cut -d= -f2-)"
+module_logs_missing_because_disabled="$(grep -E '^module_logs_missing_because_disabled=' "$RUN/ashlooper_intervention/summary.txt" 2>/dev/null | tail -1 | cut -d= -f2-)"
+pstore_files="$(find "$RUN/pstore/files" -type f 2>/dev/null | wc -l | tr -d ' ')"
+split_logcat_files="$(find "$RUN/logcat_split" -type f 2>/dev/null | wc -l | tr -d ' ')"
+focused_dumpsys_files="$(find "$RUN/dumpsys" -type f 2>/dev/null | wc -l | tr -d ' ')"
 {
   echo "Boot Watch Collector v$VERSION comprehensive summary"
   echo "version=$VERSION"
@@ -376,6 +536,13 @@ ashlooper_version="$(grep -E '^version=' "$RUN/rescue/ashlooper_health.txt" 2>/d
   echo "ashlooper_present=${ashlooper_present:-unknown}"
   echo "ashlooper_version=${ashlooper_version:-unknown}"
   echo "ashlooper_logs_found=$ash_count"
+  echo "ashlooper_intervention_possible=${ashlooper_intervention_possible:-unknown}"
+  echo "ashlooper_disabled_candidates=${ashlooper_disabled_candidates:-unknown}"
+  echo "ashlooper_reason_candidate=${ashlooper_reason_candidate:-unknown}"
+  echo "module_logs_missing_because_disabled=${module_logs_missing_because_disabled:-unknown}"
+  echo "pstore_files=${pstore_files:-0}"
+  echo "split_logcat_files=${split_logcat_files:-0}"
+  echo "focused_dumpsys_files=${focused_dumpsys_files:-0}"
   echo "ashrexcue_safe_files=$ash_count"
   echo "module_runtime_files=$module_runtime_count"
   echo "frosty_log_files=$frosty_log_count"

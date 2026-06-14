@@ -62,6 +62,13 @@ esac
   echo "pbw_ashlooper_present=$(grep_summary ashlooper_present)"
   echo "pbw_ashlooper_version=$(grep_summary ashlooper_version)"
   echo "pbw_ashlooper_logs_found=$(grep_summary ashlooper_logs_found)"
+  echo "pbw_ashlooper_intervention_possible=$(grep_summary ashlooper_intervention_possible)"
+  echo "pbw_ashlooper_disabled_candidates=$(grep_summary ashlooper_disabled_candidates)"
+  echo "pbw_ashlooper_reason_candidate=$(grep_summary ashlooper_reason_candidate)"
+  echo "pbw_module_logs_missing_because_disabled=$(grep_summary module_logs_missing_because_disabled)"
+  echo "pbw_pstore_files=$(grep_summary pstore_files)"
+  echo "pbw_split_logcat_files=$(grep_summary split_logcat_files)"
+  echo "pbw_focused_dumpsys_files=$(grep_summary focused_dumpsys_files)"
   echo "pbw_generated=$(date +%Y-%m-%dT%H:%M:%S%z)"
 } > "$STATUS_TMP" 2>/dev/null || true
 mv -f "$STATUS_TMP" "$STATUS"
@@ -90,6 +97,21 @@ mv -f "$STATUS_TMP" "$STATUS"
   echo
   echo "## ashlooper health"
   sed -n '1,220p' "$RUN/rescue/ashlooper_health.txt" 2>/dev/null || echo "missing_ashlooper_health=yes"
+  echo
+  echo "## ashlooper intervention"
+  sed -n '1,220p' "$RUN/ashlooper_intervention/summary.txt" 2>/dev/null || echo "missing_ashlooper_intervention_summary=yes"
+  echo
+  sed -n '1,220p' "$RUN/ashlooper_intervention/disabled_modules.txt" 2>/dev/null || true
+  echo
+  echo "## pstore"
+  sed -n '1,160p' "$RUN/pstore/summary.txt" 2>/dev/null || echo "missing_pstore_summary=yes"
+  find "$RUN/pstore/files" -type f 2>/dev/null | sort | sed -n '1,40p' || true
+  echo
+  echo "## focused dumpsys"
+  find "$RUN/dumpsys" -type f 2>/dev/null | sort | sed -n '1,80p' || true
+  echo
+  echo "## split logcat"
+  find "$RUN/logcat_split" -type f 2>/dev/null | sort | sed -n '1,80p' || true
   echo
   echo "## red flags summary"
   sed -n '1,120p' "$RUN/red_flags_summary.txt" 2>/dev/null || echo "missing_red_flags_summary=yes"

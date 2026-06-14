@@ -245,3 +245,7 @@ Validation baseline:
 - File-name-too-long guard: `absent`.
 
 The `standard` profile remains bounded and unchanged for foreign module log contents; Frosty/LSPosed runtime log content collection remains gated by `PBW_PROFILE=extended`, `PBW_PROFILE=debug`, or `PBW_COLLECT_MODULE_LOGS=1`.
+
+## v0.2.6-test.1 diagnostics bundle implementation note
+
+Implementation note: `v0.2.6-test.1` implements the first safe diagnostics bundle: AshLooper intervention reporting, split logcat buffers, pstore snapshot and focused dumpsys summaries. Runtime proof is still required before stable promotion.

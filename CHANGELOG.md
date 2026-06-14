@@ -17,6 +17,9 @@
 
 ## Unreleased
 
+- Implement `v0.2.6-test.1` diagnostics bundle with AshLooper intervention reporting, split logcat buffers, pstore snapshot and focused dumpsys outputs.
+- Keep stable `update.json` on `v0.2.5`; `v0.2.6-test.1` is manual-test only until install/reboot proof exists.
+
 - Planned AshLooper intervention coverage for disabled-module events where protection disables a module before Boot Watch can collect its runtime logs.
 
 
