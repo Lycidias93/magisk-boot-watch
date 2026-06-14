@@ -134,6 +134,72 @@ Explicit non-goals:
 - Do not modify Magisk/ReZygisk/Vector/Treat Wheel settings.
 - Do not run full bugreport automatically.
 <!-- ZYGISK_STACK_TREAT_WHEEL_VECTOR_VNEXT_20260606_END -->
+<!-- ASHLOOPER_INTERVENTION_VNEXT_20260609_START -->
+## AshLooper intervention vNext: disabled-module evidence gap
+
+Status: planned after the installed `v0.2.5` stable post-reboot PASS.
+
+Observed case:
+
+- AshLooper disabled a module because of a pTune-related stability/boot-loop protection event.
+- By the time Boot Watch ran, the affected module was already disabled.
+- The module therefore had no useful runtime logs available for collection.
+- Boot Watch `standard` PASS remained correct, but the root-cause evidence was incomplete.
+
+Current signal already collected:
+
+- AshLooper module health and `settings.prop` excerpts.
+- Per-module matrix with `disable=` and `remove=` marker state.
+- Module metadata from `module.prop`.
+- Standard boot result and protected export files.
+
+vNext goal:
+
+Capture AshLooper intervention context explicitly so a protection action is visible even when the target module no longer produces logs.
+
+Proposed collector additions:
+
+1. Add an `ashlooper_intervention/` run directory.
+2. Capture bounded AshLooper state on every profile:
+   - `/data/adb/modules/AshLooper/settings.prop`
+   - AshLooper module metadata
+   - `disable`, `remove`, `service.sh`, `post-fs-data.sh`, `action.sh` marker state
+   - bounded AshLooper runtime/state files under known `/data/adb/ashlooper` paths
+3. Snapshot disabled/remove module markers for all modules:
+   - module id
+   - `disable=present|absent`
+   - `remove=present|absent`
+   - marker mtime where available
+   - module `version` and `versionCode`
+4. Add a conservative classifier:
+   - `ashlooper_intervention_possible=yes|no|unknown`
+   - `ashlooper_disabled_candidates=<ids>`
+   - `ashlooper_reason_candidate=ptune|unknown`
+   - `module_logs_missing_because_disabled=yes|no|unknown`
+5. Keep root-cause language conservative:
+   - report `module disabled before collection`
+   - do not claim AshLooper caused the disable unless an AshLooper file explicitly proves it
+6. Preserve privacy/risk guard:
+   - no app-private data
+   - no unbounded recursive copies
+   - no automatic re-enable or module mutation
+   - no network upload
+   - standard profile may collect marker/state metadata, but module log contents stay gated behind `extended`
+
+Expected result text additions:
+
+- `## AshLooper intervention`
+- `ashlooper_intervention_possible=...`
+- `ashlooper_disabled_candidates=...`
+- `module_logs_missing_because_disabled=...`
+
+Acceptance criteria:
+
+- A boot where AshLooper disables pTune or another module produces a PASS result plus an explicit disabled-before-collection explanation.
+- Missing module logs are classified as an evidence limitation, not as a Boot Watch collector failure.
+- Existing v0.2.5 standard behavior stays bounded and read-only.
+<!-- ASHLOOPER_INTERVENTION_VNEXT_20260609_END -->
+
 ## Runtime proof: extended module runtime logs
 
 Status: PASS on 2026-06-06 after PR #11 (`8d3cf1a`).
