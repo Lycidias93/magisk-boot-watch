@@ -249,3 +249,7 @@ The `standard` profile remains bounded and unchanged for foreign module log cont
 ## v0.2.6-test.1 diagnostics bundle implementation note
 
 Implementation note: `v0.2.6-test.1` implements the first safe diagnostics bundle: AshLooper intervention reporting, split logcat buffers, pstore snapshot and focused dumpsys summaries. Runtime proof is still required before stable promotion.
+
+## Installed v0.2.6-test.1 diagnostics proof
+
+- Installed `v0.2.6-test.1` post-reboot diagnostics bundle proof: PASS on 2026-06-14; see `v0.2.6-test.1-post-reboot-diagnostics-proof-20260614.md`.
