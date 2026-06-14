@@ -17,6 +17,8 @@
 
 ## Unreleased
 
+- Planned AshLooper intervention coverage for disabled-module events where protection disables a module before Boot Watch can collect its runtime logs.
+
 
 ## v0.2.5-test.1 - 2026-06-07
 
