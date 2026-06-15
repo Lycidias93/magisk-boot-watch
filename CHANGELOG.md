@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.2.6 - 2026-06-15
+
+- Promoted `v0.2.6` stable after installed `v0.2.6-test.1` first and later post-reboot proofs on Pixel.
+- Adds AshLooper intervention reporting for modules disabled before collection, including conservative evidence-limitation classification.
+- Adds bounded split logcat buffers, pstore snapshot and focused dumpsys outputs to standard diagnostics.
+- Publishes stable online update metadata with `versionCode=28` and release asset `magisk-boot-watch-v0.2.6.zip`.
+
 
 ## v0.2.5 - 2026-06-08
 
@@ -16,15 +23,6 @@
 - Confirmed `db_leak=absent` for LSPosed DB guard and `file_name_too_long=absent`.
 
 ## Unreleased
-
-- Document second `v0.2.6-test.1` post-reboot diagnostics bundle PASS and mark stable promotion preparation ready.
-
-- Document installed `v0.2.6-test.1` post-reboot diagnostics bundle PASS with AshLooper intervention, split logcat and focused dumpsys proof.
-
-- Implement `v0.2.6-test.1` diagnostics bundle with AshLooper intervention reporting, split logcat buffers, pstore snapshot and focused dumpsys outputs.
-- Keep stable `update.json` on `v0.2.5`; `v0.2.6-test.1` is manual-test only until install/reboot proof exists.
-
-- Planned AshLooper intervention coverage for disabled-module events where protection disables a module before Boot Watch can collect its runtime logs.
 
 
 ## v0.2.5-test.1 - 2026-06-07

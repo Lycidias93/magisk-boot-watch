@@ -1,12 +1,12 @@
 #!/system/bin/sh
-# Boot Watch Collector v0.2.6-test.1 comprehensive one-shot collector
+# Boot Watch Collector v0.2.6 comprehensive one-shot collector
 # Bounded, local-only, no daemon after completion.
 
 MOD="/data/adb/modules/boot-watch"
 RT="/data/adb/boot-watch"
 DL="/storage/emulated/0/Download"
-VERSION="0.2.6-test.1"
-VERSION_CODE="27"
+VERSION="0.2.6"
+VERSION_CODE="28"
 PROFILE="${PBW_PROFILE:-standard}"
 MAX_SECONDS="${PBW_MAX_SECONDS:-360}"
 MAX_FILES="${PBW_MAX_FILES:-80}"

@@ -257,3 +257,7 @@ Implementation note: `v0.2.6-test.1` implements the first safe diagnostics bundl
 ## Installed v0.2.6-test.1 second reboot proof
 
 - Second installed `v0.2.6-test.1` reboot diagnostics proof: PASS on 2026-06-14; stable promotion preparation is now allowed.
+
+## v0.2.6 stable promotion
+
+- `v0.2.6` stable promotion prepared after two installed `v0.2.6-test.1` post-reboot PASS proofs; diagnostics bundle is now stable release scope.

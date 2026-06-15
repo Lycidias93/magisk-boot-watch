@@ -8,15 +8,15 @@ No daemon. No network upload. No telemetry.
 
 ## Current release
 
-- Version: `v0.2.5`
-- VersionCode: `26`
+- Version: `v0.2.6`
+- VersionCode: `28`
 - Module id: `boot-watch`
 - Runtime path: `/data/adb/boot-watch`
 - Online update metadata: [`update.json`](./update.json)
-- Release ZIP: `magisk-boot-watch-v0.2.5.zip`
-- Stable status: promoted from `v0.2.5-test.1` after Pixel installed validation.
-- Verified status: standard post-reboot PASS plus installed extended profile PASS with `module_runtime_logs_enabled=1`, `frosty_log_files=3`, `lsposed_old_log_files=4`, `db_leak=absent`, and no file-name-too-long regression.
-- Standard profile remains bounded and unchanged for foreign module log contents; extended module runtime logs remain opt-in.
+- Release ZIP: `magisk-boot-watch-v0.2.6.zip`
+- Stable status: promoted from `v0.2.6-test.1` after two Pixel installed post-reboot proofs.
+- Verified status: two installed standard post-reboot PASS proofs with AshLooper intervention reporting, split logcat files, focused dumpsys files, `file_name_too_long=absent`, and logd restored.
+- Standard profile now includes bounded diagnostics bundle outputs; foreign module runtime logs remain conservative and evidence-limitation aware when modules were disabled before collection.
 
 ## Migration from v0.1.x
 
@@ -31,7 +31,7 @@ When a v0.2.x release is flashed, it marks the legacy `pixel-boot-watch` module 
 
 ## Result files
 
-On Pixel/Termux setups using Sortify protected names, v0.2.5 writes protected result logs such as:
+On Pixel/Termux setups using Sortify protected names, v0.2.6 writes protected result logs such as:
 
 ```text
 /storage/emulated/0/Download/pixel_local__boot-watch-<run_id>-result.txt
@@ -65,7 +65,17 @@ Boot Watch Collector is bounded and local-only. It captures snapshots after boot
 
 Privacy note: collected archives may contain package names, process names, device properties, local paths, and crash/log snippets. Review before sharing publicly.
 
-## Not collected yet / vNext candidates
+## v0.2.6 diagnostics bundle
+
+v0.2.6 promotes the diagnostics bundle that was validated in `v0.2.6-test.1`:
+
+- AshLooper intervention reporting for modules disabled before collection.
+- Conservative `module_logs_missing_because_disabled` evidence-limitation signal.
+- Split logcat buffer captures.
+- pstore/ramoops snapshot when files exist.
+- Focused dumpsys outputs for bounded boot triage.
+
+## Further vNext candidates
 
 The current release intentionally avoids heavy full-device dumps. Good vNext candidates:
 

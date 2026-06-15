@@ -1,7 +1,7 @@
 id=boot-watch
 name=Boot Watch Collector
-version=0.2.6-test.1
-versionCode=27
+version=0.2.6
+versionCode=28
 author=Lycidias93 / ChatGPT
 updateJson=https://raw.githubusercontent.com/Lycidias93/magisk-boot-watch/main/update.json
-description=Boot Watch Collector v0.2.6-test.1 diagnostics bundle: AshLooper intervention reporting, split logcat buffers, pstore and focused dumpsys while staying local bounded read-only.
+description=Boot Watch Collector v0.2.6 stable diagnostics bundle: AshLooper intervention reporting, split logcat buffers, pstore and focused dumpsys while staying local bounded read-only.
