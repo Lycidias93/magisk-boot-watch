@@ -17,6 +17,8 @@
 
 ## Unreleased
 
+- Document second `v0.2.6-test.1` post-reboot diagnostics bundle PASS and mark stable promotion preparation ready.
+
 - Document installed `v0.2.6-test.1` post-reboot diagnostics bundle PASS with AshLooper intervention, split logcat and focused dumpsys proof.
 
 - Implement `v0.2.6-test.1` diagnostics bundle with AshLooper intervention reporting, split logcat buffers, pstore snapshot and focused dumpsys outputs.
