@@ -15,7 +15,7 @@ No daemon. No network upload. No telemetry.
 - Online update metadata: [`update.json`](./update.json)
 - Release ZIP: `magisk-boot-watch-v0.2.6.zip`
 - Stable status: promoted from `v0.2.6-test.1` after two Pixel installed post-reboot proofs.
-- Verified status: two installed standard post-reboot PASS proofs with AshLooper intervention reporting, split logcat files, focused dumpsys files, `file_name_too_long=absent`, and logd restored.
+- Verified status: stable `v0.2.6` installed post-reboot PASS plus two prior installed `v0.2.6-test.1` standard post-reboot PASS proofs with AshLooper intervention reporting, split logcat files, focused dumpsys files, `file_name_too_long=absent`, and logd restored.
 - Standard profile now includes bounded diagnostics bundle outputs; foreign module runtime logs remain conservative and evidence-limitation aware when modules were disabled before collection.
 
 ## Migration from v0.1.x

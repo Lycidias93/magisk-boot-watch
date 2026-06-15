@@ -2,6 +2,7 @@
 
 ## v0.2.6 - 2026-06-15
 
+- Document installed stable `v0.2.6` post-reboot PASS on Pixel with `versionCode=28`.
 - Promoted `v0.2.6` stable after installed `v0.2.6-test.1` first and later post-reboot proofs on Pixel.
 - Adds AshLooper intervention reporting for modules disabled before collection, including conservative evidence-limitation classification.
 - Adds bounded split logcat buffers, pstore snapshot and focused dumpsys outputs to standard diagnostics.
