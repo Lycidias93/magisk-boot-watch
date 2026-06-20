@@ -1,3 +1,7 @@
+<!-- telegram-release-channel:start -->
+> Release updates: [@lycidias93](https://t.me/lycidias93)
+<!-- telegram-release-channel:end -->
+
 # Boot Watch Collector
 
 Magisk boot evidence collector for Android devices.
