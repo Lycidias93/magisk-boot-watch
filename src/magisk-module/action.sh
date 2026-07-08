@@ -1,70 +1,65 @@
 #!/system/bin/sh
+# BOOT_WATCH_WEBUI_V028_ACTION_WRAPPER_START
+# Safety: Boot-Watch-only, WebUI read-only exports, no host/SSH/route/DNS actions.
+set +e
 MODDIR="${0%/*}"
-RT="/data/adb/boot-watch"
-DL="/storage/emulated/0/Download"
-LAST="$DL/pixel_local__boot-watch-last-result.txt"
-ACTION="$DL/pixel_local__boot-watch-action-last-result.txt"
-STATUS="$DL/pixel_local__boot-watch-status.env"
-mkdir -p "$RT" "$DL"
+export MODDIR
+ORIG="$MODDIR/tools/action.original-before-webui-wrapper.sh"
+STATEXP="$MODDIR/tools/boot-watch-webui-status-export.sh"
+LOGEXP="$MODDIR/tools/boot-watch-webui-log-export.sh"
+LOG="$MODDIR/action.webui-wrapper-last.log"
+TMP="$LOG.tmp.$$"
 
-if [ "${1:-}" = "--status" ]; then
-  echo "mode=status"
-  echo "module=boot-watch"
-  grep -E '^(id|name|version|versionCode|description)=' "$MODDIR/module.prop" 2>/dev/null || true
-  for f in "$LAST" "$ACTION" "$STATUS"; do
-    if [ -f "$f" ]; then
-      echo "file_present=$f"
-      ls -l "$f" 2>/dev/null || true
-    else
-      echo "file_missing=$f"
-    fi
-  done
-  [ -f "$STATUS" ] && cat "$STATUS" 2>/dev/null || true
-  echo "RESULT: BOOT_WATCH_ACTION_STATUS_DONE rc=0"
-  exit 0
-fi
+printf '%s\n' "BOOT_WATCH_WEBUI_ACTION_WRAPPER version=0.2.10-webui-runtime-root-hotfix"
+printf '%s\n' "scope=bootwatch_only"
+printf '%s\n' "routeguard=no DNS/HA/VIP/default-route/static-route/MagicDNS/subnet-route change"
 
-before_last_result_exists=no
-before_action_result_exists=no
-before_status_exists=no
-[ -f "$LAST" ] && before_last_result_exists=yes
-[ -f "$ACTION" ] && before_action_result_exists=yes
-[ -f "$STATUS" ] && before_status_exists=yes
-printf 'before_last_result_exists=%s
-' "$before_last_result_exists"
-printf 'before_action_result_exists=%s
-' "$before_action_result_exists"
-printf 'before_status_exists=%s
-' "$before_status_exists"
-
-if [ -x "$MODDIR/result-log-export.sh" ]; then
-  /system/bin/sh "$MODDIR/result-log-export.sh" "" action
-  rc=$?
+orig_rc=127
+if [ -f "$ORIG" ]; then
+  sh "$ORIG" > "$TMP" 2>&1
+  orig_rc=$?
+  cat "$TMP"
 else
-  echo "RESULT: BOOT_WATCH_ACTION_EXPORT_DONE rc=2 reason=no_result_export"
-  exit 2
+  printf '%s\n' "WARN original_action_missing"
+  : > "$TMP"
+fi
+mv -f "$TMP" "$LOG" 2>/dev/null || true
+
+webui_rc=127
+if [ -x "$STATEXP" ]; then
+  sh "$STATEXP"
+  webui_rc=$?
+fi
+printf '%s\n' "webui_export_rc=$webui_rc"
+
+log_rc=127
+if [ -x "$LOGEXP" ]; then
+  sh "$LOGEXP"
+  log_rc=$?
+fi
+printf '%s\n' "log_export_rc=$log_rc"
+printf '%s\n' "original_action_rc=$orig_rc"
+
+if [ "$webui_rc" = 0 ] && [ "$log_rc" = 0 ] && [ "$orig_rc" = 2 ]; then
+  if grep -q 'reason=no_result_export' "$LOG" 2>/dev/null; then
+    printf '%s\n' "WARN legacy_action_no_result_export_treated_as_webui_refresh_only"
+    printf '%s\n' "RESULT: BOOT_WATCH_WEBUI_ACTION_REFRESH_DONE rc=0 reason=legacy_no_result_export"
+    exit 0
+  fi
 fi
 
-after_last_result_exists=no
-after_action_result_exists=no
-after_status_exists=no
-[ -f "$LAST" ] && after_last_result_exists=yes
-[ -f "$ACTION" ] && after_action_result_exists=yes
-[ -f "$STATUS" ] && after_status_exists=yes
-printf 'after_last_result_exists=%s
-' "$after_last_result_exists"
-printf 'after_action_result_exists=%s
-' "$after_action_result_exists"
-printf 'after_status_exists=%s
-' "$after_status_exists"
-[ -f "$LAST" ] && printf 'last_result_size=%s
-' "$(wc -c < "$LAST" 2>/dev/null || echo 0)"
-[ -f "$ACTION" ] && printf 'action_result_size=%s
-' "$(wc -c < "$ACTION" 2>/dev/null || echo 0)"
-[ -f "$STATUS" ] && printf 'status_env_size=%s
-' "$(wc -c < "$STATUS" 2>/dev/null || echo 0)"
-echo "protected_names=yes"
-echo "sortify_hold_expected=yes"
-[ "$rc" = "0" ] || exit "$rc"
-echo "RESULT: BOOT_WATCH_ACTION_EXPORT_DONE rc=0"
+if [ "$webui_rc" != 0 ]; then
+  printf '%s\n' "RESULT: BOOT_WATCH_WEBUI_ACTION_REFRESH_DONE rc=$webui_rc reason=webui_export_failed"
+  exit "$webui_rc"
+fi
+if [ "$log_rc" != 0 ]; then
+  printf '%s\n' "RESULT: BOOT_WATCH_WEBUI_ACTION_REFRESH_DONE rc=$log_rc reason=log_export_failed"
+  exit "$log_rc"
+fi
+if [ "$orig_rc" != 0 ]; then
+  printf '%s\n' "RESULT: BOOT_WATCH_WEBUI_ACTION_REFRESH_DONE rc=$orig_rc reason=original_action_failed"
+  exit "$orig_rc"
+fi
+
+printf '%s\n' "RESULT: BOOT_WATCH_WEBUI_ACTION_REFRESH_DONE rc=0"
 exit 0

@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.2.10 - 2026-07-08
+
+- Fixes Boot Watch WebUI run history after the module id/runtime rename by aligning WebUI exporters with protected result files named `pixel_local__boot-watch-*`.
+- Adds WebUI exporter helpers under `tools/` and read-only WebUI assets under `webroot/` to the reproducible module source.
+- Sanitizes committed WebUI JSON to build-time skeleton files instead of runtime log snapshots.
+- Verifies installed Pixel runtime after reboot: active version `0.2.10-webui-runtime-root-hotfix`, active old-prefix count `0`, boot run `20260707_174749_boot` PASS, and WebUI run history populated from current result files.
+- Updates stable online metadata to versionCode `35`.
+
+
 ## v0.2.6 - 2026-06-15
 
 - Document installed stable `v0.2.6` post-reboot PASS on Pixel with `versionCode=28`.

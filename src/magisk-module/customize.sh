@@ -3,7 +3,7 @@ SKIPUNZIP=0
 LEGACY_MOD="/data/adb/modules/pixel-boot-watch"
 ACTIVE_MOD="/data/adb/modules/boot-watch"
 ui_print "********************************"
-ui_print " Boot Watch Collector v0.2.6"
+ui_print " Boot Watch Collector v0.2.10-webui-runtime-root-hotfix"
 ui_print "********************************"
 ui_print "- New module id: boot-watch"
 ui_print "- Runtime: /data/adb/boot-watch"
@@ -25,8 +25,8 @@ fi
 if [ -f "$ACTIVE_MOD/module.prop" ] && grep -q "^id=boot-watch$" "$ACTIVE_MOD/module.prop" 2>/dev/null; then
   rm -f "$ACTIVE_MOD/disable" "$ACTIVE_MOD/remove" 2>/dev/null || true
 fi
-ui_print "- v0.2.6: stable diagnostics bundle release"
-ui_print "- Adds AshLooper intervention, split logcat, pstore and focused dumpsys"
+ui_print "- v0.2.10: WebUI runtime-root and result-prefix hotfix"
+ui_print "- Keeps WebUI run history aligned with pixel_local__boot-watch result files"
 ui_print "- Stable update channel promotes v0.2.6"
 ui_print "- v0.2.4: service-time active-module marker guard"
 ui_print "- v0.2.4: robust boot export hook"
@@ -37,4 +37,7 @@ set_perm "$MODPATH/result-log-export.sh" 0 0 0755
 set_perm "$MODPATH/action.sh" 0 0 0755
 set_perm "$MODPATH/manual-collect.sh" 0 0 0755
 set_perm "$MODPATH/uninstall.sh" 0 0 0755
+set_perm "$MODPATH/tools/boot-watch-webui-log-export.sh" 0 0 0755
+set_perm "$MODPATH/tools/boot-watch-webui-status-export.sh" 0 0 0755
+set_perm "$MODPATH/tools/action.original-before-webui-wrapper.sh" 0 0 0755
 ui_print "- Reboot required"

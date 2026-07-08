@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Boot Watch</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Boot Watch Collector</p>
+        <h1>Boot Watch</h1>
+        <p class="subline">Read-only runtime status, logs and run history.</p>
+      </div>
+      <div class="heroStatus">
+        <span id="statusBadge" class="badge muted">loading</span>
+        <span id="lastRefresh" class="tiny">waiting for JSON</span>
+      </div>
+    </header>
+
+    <nav class="tabs" aria-label="Boot Watch sections">
+      <button class="tab active" data-tab="overview">Overview</button>
+      <button class="tab" data-tab="logs">Logs</button>
+      <button class="tab" data-tab="runs">Runs</button>
+      <button class="tab" data-tab="safety">Safety</button>
+    </nav>
+
+    <section id="overview" class="panel tabPanel active">
+      <div id="quickCards" class="cards"></div>
+      <div id="overviewTable" class="tableWrap"></div>
+    </section>
+
+    <section id="logs" class="panel tabPanel">
+      <div class="toolbar">
+        <input id="logSearch" type="search" placeholder="Filter logs by label, path or text">
+        <button id="expandAll" type="button">Expand all</button>
+        <button id="collapseAll" type="button">Collapse all</button>
+      </div>
+      <div id="logSummary" class="summary"></div>
+      <div id="logsList" class="stack"></div>
+    </section>
+
+    <section id="runs" class="panel tabPanel">
+      <div id="runSummary" class="summary"></div>
+      <div id="runsList" class="timeline"></div>
+    </section>
+
+    <section id="safety" class="panel tabPanel">
+      <div id="safetyGrid" class="cards"></div>
+      <div class="notice">This WebUI is display-only and module-scoped. It does not run host commands, network actions or route changes.</div>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
