@@ -1,7 +1,7 @@
 id=boot-watch
 name=Boot Watch Collector
-version=0.2.11-webui-core-pilot.1
-versionCode=36
+version=0.2.11-webui-core-pilot.2
+versionCode=37
 author=Lycidias93 / ChatGPT
 updateJson=https://raw.githubusercontent.com/Lycidias93/magisk-boot-watch/main/update.json
-description=Boot Watch Collector pilot using shared standalone WebUI core 0.2.1; collector logic remains unchanged and WebUI is read-only.
+description=Boot Watch Collector pilot using shared standalone WebUI core 0.2.2; collector logic remains unchanged and WebUI is read-only.
