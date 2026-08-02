@@ -1,0 +1,32 @@
+name: export-source
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    if: github.head_ref == 'repo-maintenance/webui-core-v02-pilot'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 1
+      - name: Create source archive
+        run: |
+          set -euo pipefail
+          tar --exclude=.git --exclude=.github/workflows/export-source.yml -czf magisk-boot-watch-source.tar.gz .
+          sha256sum magisk-boot-watch-source.tar.gz > magisk-boot-watch-source.tar.gz.sha256
+      - uses: actions/upload-artifact@v6
+        with:
+          name: magisk-boot-watch-source
+          path: |
+            magisk-boot-watch-source.tar.gz
+            magisk-boot-watch-source.tar.gz.sha256
+          if-no-files-found: error
+          retention-days: 1
