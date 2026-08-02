@@ -13,22 +13,33 @@ jobs:
     if: github.head_ref == 'repo-maintenance/webui-core-v02-pilot'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - name: Checkout Boot Watch
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 1
+          path: boot-watch
+      - name: Checkout shared WebUI template
+        uses: actions/checkout@v5
+        with:
+          repository: Lycidias93/android-root-module-webui-template
+          ref: main
+          fetch-depth: 1
+          path: webui-template
       - name: Create source archive
         run: |
           set -euo pipefail
-          archive="$RUNNER_TEMP/magisk-boot-watch-source.tar.gz"
-          tar --exclude=.git --exclude=.github/workflows/export-source.yml -czf "$archive" .
-          cp "$archive" magisk-boot-watch-source.tar.gz
-          sha256sum magisk-boot-watch-source.tar.gz > magisk-boot-watch-source.tar.gz.sha256
+          archive="$RUNNER_TEMP/webui-pilot-sources.tar.gz"
+          rm -f boot-watch/.github/workflows/export-source.yml
+          find boot-watch webui-template -type d -name .git -prune -exec rm -rf {} +
+          tar -czf "$archive" boot-watch webui-template
+          cp "$archive" webui-pilot-sources.tar.gz
+          sha256sum webui-pilot-sources.tar.gz > webui-pilot-sources.tar.gz.sha256
       - uses: actions/upload-artifact@v6
         with:
-          name: magisk-boot-watch-source
+          name: webui-pilot-sources
           path: |
-            magisk-boot-watch-source.tar.gz
-            magisk-boot-watch-source.tar.gz.sha256
+            webui-pilot-sources.tar.gz
+            webui-pilot-sources.tar.gz.sha256
           if-no-files-found: error
           retention-days: 1
