@@ -32,7 +32,7 @@ jobs:
         with:
           name: boot-watch-webui-core-pilot
           path: |
-            dist/boot-watch-0.2.11-webui-core-pilot.1.zip
+            dist/boot-watch-0.2.11-webui-core-pilot.2.zip
             dist/webui-pilot-build-manifest.json
           if-no-files-found: error
           retention-days: 14
