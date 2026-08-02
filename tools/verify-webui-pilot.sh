@@ -63,6 +63,11 @@ for file in \
   sh -n "$file"
 done
 
+if grep -Fq 'set_perm "$MODPATH/META-INF/' src/magisk-module/customize.sh; then
+  echo "FAIL installer_only_path_chmod"
+  exit 1
+fi
+
 grep -Fxq 'id=boot-watch' src/magisk-module/module.prop
 grep -Fxq 'version=0.2.11-webui-core-pilot.1' src/magisk-module/module.prop
 grep -Fxq 'versionCode=36' src/magisk-module/module.prop
