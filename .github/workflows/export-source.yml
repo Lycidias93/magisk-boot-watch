@@ -20,7 +20,9 @@ jobs:
       - name: Create source archive
         run: |
           set -euo pipefail
-          tar --exclude=.git --exclude=.github/workflows/export-source.yml -czf magisk-boot-watch-source.tar.gz .
+          archive="$RUNNER_TEMP/magisk-boot-watch-source.tar.gz"
+          tar --exclude=.git --exclude=.github/workflows/export-source.yml -czf "$archive" .
+          cp "$archive" magisk-boot-watch-source.tar.gz
           sha256sum magisk-boot-watch-source.tar.gz > magisk-boot-watch-source.tar.gz.sha256
       - uses: actions/upload-artifact@v6
         with:
