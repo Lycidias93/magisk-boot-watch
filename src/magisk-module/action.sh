@@ -58,8 +58,8 @@ fail() {
 
 make_token() {
   if [ -r /proc/sys/kernel/random/uuid ]; then
-    first=$(tr -d '-\n' < /proc/sys/kernel/random/uuid)
-    second=$(tr -d '-\n' < /proc/sys/kernel/random/uuid)
+    first=$(sed 's/-//g' < /proc/sys/kernel/random/uuid)
+    second=$(sed 's/-//g' < /proc/sys/kernel/random/uuid)
     printf '%s%s\n' "$first" "$second"
     return 0
   fi
