@@ -2,8 +2,8 @@
 
 ## Purpose
 
-Boot Watch is the first real module pilot for the shared standalone browser
-WebUI core.
+Boot Watch is the first real module migration pilot for the shared standalone
+browser WebUI core. It is not the first Magisk module in this project.
 
 The collector and its persistent runtime paths remain unchanged:
 
@@ -17,8 +17,14 @@ Only the optional WebUI transport and rendering layer changes.
 ## Pinned core
 
 - source: `Lycidias93/android-root-module-webui-template`
-- core version: `0.2.1`
-- source commit: `cdb872d2afb9f86300dd26f6474820ab5de3efca`
+- core version: `0.2.2`
+- source commit: `5b8e412428cd04b1cf98a1fc0e03269580b60d71`
+- pilot module revision: `0.2.11-webui-core-pilot.2`
+
+Core `0.2.2` includes the Pixel-proven Magisk BusyBox portability fix for UUID
+token generation. The earlier `.1` pilot could install successfully but its
+Action failed before server startup because `tr -d '-\n'` was parsed as an
+invalid BusyBox option.
 
 ## Adapter contract
 
