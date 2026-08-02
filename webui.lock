@@ -1,0 +1,7 @@
+schema=root-module-webui.lock.v1
+source_repository=Lycidias93/android-root-module-webui-template
+source_ref=main
+core_version=0.2.1
+core_commit=cdb872d2afb9f86300dd26f6474820ab5de3efca
+module_layout=src/magisk-module
+managed_files=action.sh,webroot/index.html,webroot/app.js,webroot/app.css,webui-core/server/cmd/webui-server/main.go,webui-core/server/cmd/webui-server/main_test.go

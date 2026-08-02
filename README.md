@@ -1,5 +1,13 @@
 # Boot Watch Collector
 
+> **Development pilot:** `0.2.11-webui-core-pilot.1` migrates the optional
+> read-only WebUI to shared core `0.2.1`. It is repository-verified but not yet
+> installed-runtime verified. Stable release and update metadata remain on
+> `0.2.10-webui-runtime-root-hotfix`.
+
+See [Shared WebUI core pilot](docs/webui-core-pilot.md) and
+[Boot Watch vNext roadmap](docs/VNEXT.md).
+
 **Magisk module for Android boot evidence collection, protected result exports, read-only WebUI status, and boot-crash handoff bundles.**
 
 Stable **0.2.10-webui-runtime-root-hotfix** fixes the WebUI run-history exporter after the module moved to the current boot-watch runtime and protected result-file scheme. It is runtime-verified on Pixel after reboot with active old-prefix count 0, a PASS boot run, and populated WebUI run history.

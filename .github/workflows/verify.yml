@@ -4,15 +4,35 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - name: Verify release zip when present
-        run: |
-          set -euo pipefail
-          if [ -f releases/v0.2.0/magisk-boot-watch-v0.2.0.zip ]; then
-            bash tools/verify-magisk-boot-watch-v0.2.0.sh releases/v0.2.0/magisk-boot-watch-v0.2.0.zip
-          fi
-          find src/magisk-module -name '*.sh' -print0 | xargs -0 -r sh -n
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: webui-core/go.mod
+          cache: false
+
+      - name: Install build tools
+        run: sudo apt-get update && sudo apt-get install -y curl python3 zip unzip
+
+      - name: Verify pilot
+        run: ./tools/verify-webui-pilot.sh
+
+      - name: Build deterministic pilot package
+        run: ./tools/build-webui-pilot.sh
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: boot-watch-webui-core-pilot
+          path: |
+            dist/boot-watch-0.2.11-webui-core-pilot.1.zip
+            dist/webui-pilot-build-manifest.json
+          if-no-files-found: error
+          retention-days: 14

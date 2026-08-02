@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased — shared WebUI core pilot
+
+- Prepare Boot Watch `0.2.11-webui-core-pilot.1` on shared WebUI core `0.2.1`.
+- Replace generated WebUI JSON snapshots and exporter wrappers with live,
+  typed, read-only status, log and inventory APIs.
+- Keep collector, service, runtime paths and protected export names unchanged.
+- Add deterministic ARM64 pilot packaging, contract tests and HTTP integration.
+- Add a current vNext roadmap that separates delivered diagnostics from
+  remaining opt-in work.
+- Do not update the stable channel, create a tag, or publish a release until
+  installed post-reboot validation succeeds.
+
 ## v0.2.10 - 2026-07-08
 
 - Fixes Boot Watch WebUI run history after the module id/runtime rename by aligning WebUI exporters with protected result files named `pixel_local__boot-watch-*`.

@@ -1,0 +1,233 @@
+#!/system/bin/sh
+set -u
+umask 077
+
+BINDIR=${0%/*}
+MODDIR=${MODULE_DIR:-${BINDIR%/bin}}
+PROP="$MODDIR/module.prop"
+MODULE_ID=$(sed -n 's/^id=//p' "$PROP" 2>/dev/null | head -n 1)
+MODULE_NAME=$(sed -n 's/^name=//p' "$PROP" 2>/dev/null | head -n 1)
+MODULE_VERSION=$(sed -n 's/^version=//p' "$PROP" 2>/dev/null | head -n 1)
+
+case "$MODULE_ID" in
+  boot-watch) ;;
+  *) echo '{"ok":false,"error":"unexpected module id"}' >&2; exit 2 ;;
+esac
+
+STATE_DIR=${MODULE_STATE_DIR:-/data/adb/boot-watch}
+RUNTIME_DIR=${WEBUI_RUNTIME_DIR:-/data/local/tmp/boot-watch-webui}
+DOWNLOAD_DIR=${BOOT_WATCH_DOWNLOAD_DIR:-/storage/emulated/0/Download}
+STATUS_ENV="$DOWNLOAD_DIR/pixel_local__boot-watch-status.env"
+LAST_RESULT="$DOWNLOAD_DIR/pixel_local__boot-watch-last-result.txt"
+ACTION_RESULT="$DOWNLOAD_DIR/pixel_local__boot-watch-action-last-result.txt"
+SERVICE_LOG="$STATE_DIR/service-launch.log"
+RUNS_DIR="$STATE_DIR/runs"
+MAX_INVENTORY_RUNS=${BOOT_WATCH_WEBUI_HISTORY_LIMIT:-20}
+
+json_escape() {
+  printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' -e ':a;N;$!ba;s/\n/\\n/g'
+}
+
+safe_value() {
+  key=$1
+  file=$2
+  case "$key" in
+    *password*|*passphrase*|*token*|*secret*|*private_key*|*authorization*|*cookie*) return 0 ;;
+  esac
+  grep -m1 "^${key}=" "$file" 2>/dev/null | sed "s/^${key}=//" | tr -d '\r' | head -c 2048
+}
+
+file_size() {
+  [ -f "$1" ] && wc -c < "$1" 2>/dev/null | tr -d ' ' || printf '0'
+}
+
+file_mtime() {
+  [ -f "$1" ] && date -r "$1" '+%Y-%m-%dT%H:%M:%S%z' 2>/dev/null || printf ''
+}
+
+file_state() {
+  if [ -s "$1" ]; then
+    printf 'present'
+  elif [ -e "$1" ]; then
+    printf 'empty'
+  else
+    printf 'missing'
+  fi
+}
+
+level_for_result() {
+  case "$1" in
+    PASS|success|SUCCESS|ok|OK) printf 'good' ;;
+    FAIL|failed|FAILED|error|ERROR) printf 'danger' ;;
+    WARN|warning|WARNING|partial|PARTIAL) printf 'caution' ;;
+    *) printf 'muted' ;;
+  esac
+}
+
+print_capabilities() {
+  printf '{'
+  printf '"schema":"root-module-webui.capabilities.v1",'
+  printf '"module":{"id":"%s","name":"%s","version":"%s"},' \
+    "$(json_escape "$MODULE_ID")" "$(json_escape "$MODULE_NAME")" "$(json_escape "$MODULE_VERSION")"
+  printf '"features":{"config":false,"logs":true,"actions":false,"jobs":false,"inventory":true},'
+  printf '"config_fields":[],"actions":[],"jobs":[],'
+  printf '"inventories":['
+  printf '{"name":"runs","label":"Recent runs","description":"Protected Boot Watch result history from Download."},'
+  printf '{"name":"evidence","label":"Evidence files","description":"Presence, size and age of allowlisted Boot Watch evidence."}'
+  printf ']}'
+  printf '\n'
+}
+
+print_status() {
+  result=$(safe_value pbw_result "$STATUS_ENV")
+  run_id=$(safe_value pbw_run_id "$STATUS_ENV")
+  mode=$(safe_value pbw_mode "$STATUS_ENV")
+  collector_version=$(safe_value pbw_version "$STATUS_ENV")
+  archive_path=$(safe_value pbw_archive_path "$STATUS_ENV")
+  generated=$(safe_value pbw_generated "$STATUS_ENV")
+  filename_long=$(safe_value pbw_file_name_too_long "$STATUS_ENV")
+  [ -n "$result" ] || result=unknown
+  [ -n "$run_id" ] || run_id=none
+  [ -n "$mode" ] || mode=unknown
+  [ -n "$collector_version" ] || collector_version=unknown
+  [ -n "$generated" ] || generated=unknown
+  archive_state=missing
+  [ -n "$archive_path" ] && [ -f "$archive_path" ] && archive_state=present
+
+  printf '{"ok":true,'
+  printf '"module":{"id":"%s","name":"%s","version":"%s"},' \
+    "$(json_escape "$MODULE_ID")" "$(json_escape "$MODULE_NAME")" "$(json_escape "$MODULE_VERSION")"
+  printf '"summary":['
+  printf '{"label":"Result","value":"%s","level":"%s"},' "$(json_escape "$result")" "$(level_for_result "$result")"
+  printf '{"label":"Run ID","value":"%s","level":"muted"},' "$(json_escape "$run_id")"
+  printf '{"label":"Mode","value":"%s","level":"muted"},' "$(json_escape "$mode")"
+  printf '{"label":"Collector","value":"%s","level":"muted"},' "$(json_escape "$collector_version")"
+  printf '{"label":"Archive","value":"%s","level":"%s"},' "$(json_escape "$archive_state")" "$( [ "$archive_state" = present ] && printf good || printf caution )"
+  printf '{"label":"Filename guard","value":"%s","level":"%s"}' \
+    "$(json_escape "${filename_long:-unknown}")" "$( [ "${filename_long:-unknown}" = absent ] && printf good || printf caution )"
+  printf '],'
+  printf '"runtime":{'
+  printf '"state_dir":"%s",' "$(json_escape "$STATE_DIR")"
+  printf '"runs_dir":"%s",' "$(json_escape "$RUNS_DIR")"
+  printf '"download_dir":"%s",' "$(json_escape "$DOWNLOAD_DIR")"
+  printf '"status_source":"%s",' "$(json_escape "$STATUS_ENV")"
+  printf '"status_state":"%s",' "$(file_state "$STATUS_ENV")"
+  printf '"status_generated":"%s",' "$(json_escape "$generated")"
+  printf '"last_result_state":"%s",' "$(file_state "$LAST_RESULT")"
+  printf '"action_result_state":"%s",' "$(file_state "$ACTION_RESULT")"
+  printf '"service_log_state":"%s"' "$(file_state "$SERVICE_LOG")"
+  printf '},'
+  printf '"health":{"status_env":"%s","archive":"%s"},' "$(file_state "$STATUS_ENV")" "$archive_state"
+  printf '"safety":{'
+  printf '"loopback_only":true,'
+  printf '"read_only_adapter":true,'
+  printf '"arbitrary_shell_blocked":true,'
+  printf '"unrestricted_paths_blocked":true,'
+  printf '"token_in_argv_absent":true,'
+  printf '"boot_dependency_absent":true,'
+  printf '"cross_module_access_absent":true'
+  printf '}}\n'
+}
+
+redact_stream() {
+  grep -Evi 'password|passphrase|private[_-]?key|authorization|bearer|api[_-]?key|token=|secret=|cookie=' || true
+}
+
+safe_tail() {
+  label=$1
+  file=$2
+  lines=$3
+  printf '\n===== %s =====\n' "$label"
+  printf 'path=%s\nstate=%s\nbytes=%s\nmodified=%s\n---\n' \
+    "$file" "$(file_state "$file")" "$(file_size "$file")" "$(file_mtime "$file")"
+  [ -f "$file" ] && tail -n "$lines" "$file" 2>/dev/null | redact_stream
+}
+
+print_log() {
+  lines=$1
+  case "$lines" in ""|*[!0-9]*) return 2 ;; esac
+  [ "$lines" -ge 1 ] && [ "$lines" -le 1000 ] || return 2
+  per=$((lines / 4))
+  [ "$per" -ge 20 ] || per=20
+  safe_tail "STATUS ENV" "$STATUS_ENV" "$per"
+  safe_tail "LAST RESULT" "$LAST_RESULT" "$per"
+  safe_tail "ACTION RESULT" "$ACTION_RESULT" "$per"
+  safe_tail "SERVICE LOG" "$SERVICE_LOG" "$per"
+}
+
+run_field() {
+  key=$1
+  file=$2
+  value=$(grep -m1 "^${key}=" "$file" 2>/dev/null | sed "s/^${key}=//" | tr -d '\r' || true)
+  printf '%s' "$value" | head -c 512
+}
+
+print_runs_inventory() {
+  printf '{"ok":true,"name":"runs","columns":["run_id","result","mode","version","modified","bytes"],"items":['
+  first=1
+  if [ -d "$DOWNLOAD_DIR" ]; then
+    find "$DOWNLOAD_DIR" -maxdepth 1 -type f -name 'pixel_local__boot-watch-*-result.txt' 2>/dev/null \
+      | sort -r | head -n "$MAX_INVENTORY_RUNS" \
+      | while IFS= read -r file; do
+          run_id=$(run_field pbw_run_id "$file")
+          [ -n "$run_id" ] || run_id=$(basename "$file" | sed -n 's/^pixel_local__boot-watch-\(.*\)-result.txt$/\1/p')
+          result=$(run_field pbw_result "$file")
+          [ -n "$result" ] || result=$(run_field result "$file")
+          mode=$(run_field pbw_mode "$file")
+          [ -n "$mode" ] || mode=$(run_field mode "$file")
+          version=$(run_field pbw_version "$file")
+          [ -n "$version" ] || version=unknown
+          if [ "$first" -eq 0 ]; then printf ','; fi
+          first=0
+          printf '{"run_id":"%s","result":"%s","mode":"%s","version":"%s","modified":"%s","bytes":"%s"}' \
+            "$(json_escape "${run_id:-unknown}")" "$(json_escape "${result:-unknown}")" \
+            "$(json_escape "${mode:-unknown}")" "$(json_escape "$version")" \
+            "$(json_escape "$(file_mtime "$file")")" "$(file_size "$file")"
+        done
+  fi
+  printf ']}\n'
+}
+
+evidence_item() {
+  label=$1
+  file=$2
+  if [ "$EVIDENCE_FIRST" -eq 0 ]; then printf ','; fi
+  EVIDENCE_FIRST=0
+  printf '{"name":"%s","state":"%s","bytes":"%s","modified":"%s"}' \
+    "$(json_escape "$label")" "$(file_state "$file")" "$(file_size "$file")" "$(json_escape "$(file_mtime "$file")")"
+}
+
+print_evidence_inventory() {
+  printf '{"ok":true,"name":"evidence","columns":["name","state","bytes","modified"],"items":['
+  EVIDENCE_FIRST=1
+  evidence_item "Status ENV" "$STATUS_ENV"
+  evidence_item "Last result" "$LAST_RESULT"
+  evidence_item "Action result" "$ACTION_RESULT"
+  evidence_item "Service log" "$SERVICE_LOG"
+  printf ']}\n'
+}
+
+case "${1:-}" in
+  capabilities)
+    print_capabilities
+    ;;
+  status)
+    print_status
+    ;;
+  log)
+    [ "$#" -eq 2 ] || exit 2
+    print_log "$2"
+    ;;
+  inventory)
+    [ "$#" -eq 2 ] || exit 2
+    case "$2" in
+      runs) print_runs_inventory ;;
+      evidence) print_evidence_inventory ;;
+      *) exit 2 ;;
+    esac
+    ;;
+  *)
+    echo '{"ok":false,"error":"unsupported read-only operation"}' >&2
+    exit 2
+    ;;
+esac
