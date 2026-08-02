@@ -42,6 +42,5 @@ for file in \
 do
   set_perm "$MODPATH/$file" 0 0 0755
 done
-set_perm "$MODPATH/META-INF/com/google/android/update-binary" 0 0 0755
 
 ui_print "- Reboot required"
