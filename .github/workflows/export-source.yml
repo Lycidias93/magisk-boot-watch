@@ -1,4 +1,4 @@
-name: export-source
+name: materialize-webui-pilot
 
 on:
   pull_request:
@@ -6,40 +6,39 @@ on:
       - main
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  export:
+  materialize:
     if: github.head_ref == 'repo-maintenance/webui-core-v02-pilot'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Boot Watch
+      - name: Checkout Boot Watch branch
         uses: actions/checkout@v5
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          fetch-depth: 1
-          path: boot-watch
-      - name: Checkout shared WebUI template
+          ref: repo-maintenance/webui-core-v02-pilot
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Checkout pinned shared WebUI core
         uses: actions/checkout@v5
         with:
           repository: Lycidias93/android-root-module-webui-template
-          ref: main
+          ref: cdb872d2afb9f86300dd26f6474820ab5de3efca
           fetch-depth: 1
-          path: webui-template
-      - name: Create source archive
+          path: .webui-template
+          persist-credentials: false
+      - name: Materialize exact shared core
         run: |
           set -euo pipefail
-          archive="$RUNNER_TEMP/webui-pilot-sources.tar.gz"
-          rm -f boot-watch/.github/workflows/export-source.yml
-          find boot-watch webui-template -type d -name .git -prune -exec rm -rf {} +
-          tar -czf "$archive" boot-watch webui-template
-          cp "$archive" webui-pilot-sources.tar.gz
-          sha256sum webui-pilot-sources.tar.gz > webui-pilot-sources.tar.gz.sha256
-      - uses: actions/upload-artifact@v6
-        with:
-          name: webui-pilot-sources
-          path: |
-            webui-pilot-sources.tar.gz
-            webui-pilot-sources.tar.gz.sha256
-          if-no-files-found: error
-          retention-days: 1
+          ./tools/materialize-webui-pilot.sh "$GITHUB_WORKSPACE/.webui-template"
+      - name: Commit materialized source
+        run: |
+          set -euo pipefail
+          if git diff --cached --quiet; then
+            echo "RESULT: BOOT_WATCH_WEBUI_MATERIALIZE_NOOP"
+            exit 0
+          fi
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git commit -m 'pilot: materialize shared WebUI core 0.2.1'
+          git push origin HEAD:repo-maintenance/webui-core-v02-pilot
