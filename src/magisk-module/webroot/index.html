@@ -2,54 +2,94 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Boot Watch</title>
-  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>Root Module WebUI</title>
+  <link rel="stylesheet" href="app.css">
 </head>
 <body>
   <main class="shell">
     <header class="hero">
       <div>
-        <p class="eyebrow">Boot Watch Collector</p>
-        <h1>Boot Watch</h1>
-        <p class="subline">Read-only runtime status, logs and run history.</p>
+        <p class="eyebrow">LOCAL · LOOPBACK ONLY</p>
+        <h1 id="moduleName">Root Module WebUI</h1>
+        <p id="moduleVersion" class="subline">Connecting to the module adapter…</p>
       </div>
-      <div class="heroStatus">
-        <span id="statusBadge" class="badge muted">loading</span>
-        <span id="lastRefresh" class="tiny">waiting for JSON</span>
-      </div>
+      <span id="connectionBadge" class="badge muted">connecting</span>
     </header>
 
-    <nav class="tabs" aria-label="Boot Watch sections">
-      <button class="tab active" data-tab="overview">Overview</button>
-      <button class="tab" data-tab="logs">Logs</button>
-      <button class="tab" data-tab="runs">Runs</button>
-      <button class="tab" data-tab="safety">Safety</button>
+    <div id="notice" class="notice hidden" role="status" aria-live="polite"></div>
+
+    <nav class="tabs" aria-label="WebUI sections">
+      <button class="tab active" data-panel="overviewPanel">Overview</button>
+      <button class="tab" data-panel="settingsPanel" data-feature="config">Settings</button>
+      <button class="tab" data-panel="actionsPanel" data-feature="actions">Actions</button>
+      <button class="tab" data-panel="jobsPanel" data-feature="jobs">Jobs</button>
+      <button class="tab" data-panel="inventoryPanel" data-feature="inventory">Inventory</button>
+      <button class="tab" data-panel="logsPanel" data-feature="logs">Logs</button>
+      <button class="tab" data-panel="safetyPanel">Safety</button>
     </nav>
 
-    <section id="overview" class="panel tabPanel active">
-      <div id="quickCards" class="cards"></div>
-      <div id="overviewTable" class="tableWrap"></div>
-    </section>
-
-    <section id="logs" class="panel tabPanel">
-      <div class="toolbar">
-        <input id="logSearch" type="search" placeholder="Filter logs by label, path or text">
-        <button id="expandAll" type="button">Expand all</button>
-        <button id="collapseAll" type="button">Collapse all</button>
+    <section id="overviewPanel" class="panel tab-panel active">
+      <div class="panel-heading">
+        <div><h2>Overview</h2><p>Current module and runtime state.</p></div>
+        <button id="refreshButton" type="button">Refresh all</button>
       </div>
-      <div id="logSummary" class="summary"></div>
-      <div id="logsList" class="stack"></div>
+      <div id="statusCards" class="cards"></div>
+      <div id="statusDetails" class="details-grid"></div>
     </section>
 
-    <section id="runs" class="panel tabPanel">
-      <div id="runSummary" class="summary"></div>
-      <div id="runsList" class="timeline"></div>
+    <section id="settingsPanel" class="panel tab-panel" data-feature="config">
+      <div class="panel-heading">
+        <div><h2>Settings</h2><p>Schema-driven fields validated by both server and module adapter.</p></div>
+        <span id="dirtyBadge" class="badge caution hidden">unsaved</span>
+      </div>
+      <form id="configForm" class="form-grid"></form>
+      <div class="actions-row"><button id="saveConfigButton" class="primary" type="submit" form="configForm">Save settings</button></div>
     </section>
 
-    <section id="safety" class="panel tabPanel">
-      <div id="safetyGrid" class="cards"></div>
-      <div class="notice">This WebUI is display-only and module-scoped. It does not run host commands, network actions or route changes.</div>
+    <section id="actionsPanel" class="panel tab-panel" data-feature="actions">
+      <div class="panel-heading"><div><h2>Actions</h2><p>Allowlisted operations with risk and confirmation contracts.</p></div></div>
+      <div id="actionCards" class="stack"></div>
+    </section>
+
+    <section id="jobsPanel" class="panel tab-panel" data-feature="jobs">
+      <div class="panel-heading"><div><h2>Background jobs</h2><p>Long-running work stays outside the browser request lifecycle.</p></div></div>
+      <div id="jobLaunchers" class="cards"></div>
+      <div id="jobList" class="stack"></div>
+    </section>
+
+    <section id="inventoryPanel" class="panel tab-panel" data-feature="inventory">
+      <div class="panel-heading"><div><h2>Inventory</h2><p>Typed, module-provided inventory views.</p></div></div>
+      <div id="inventoryLaunchers" class="actions-row"></div>
+      <div id="inventoryOutput" class="table-wrap"></div>
+    </section>
+
+    <section id="logsPanel" class="panel tab-panel" data-feature="logs">
+      <div class="panel-heading">
+        <div><h2>Logs</h2><p>Bounded output from the module adapter.</p></div>
+        <div class="actions-row compact">
+          <button id="reloadLogButton" type="button">Reload</button>
+          <button id="copyLogButton" type="button">Copy</button>
+        </div>
+      </div>
+      <label class="field">
+        <span>Filter</span>
+        <input id="logFilter" type="search" placeholder="Filter log text">
+      </label>
+      <pre id="logOutput" class="log-output">No log loaded.</pre>
+    </section>
+
+    <section id="safetyPanel" class="panel tab-panel">
+      <div class="panel-heading"><div><h2>Safety contract</h2><p>Runtime boundaries reported by the adapter and enforced by the server.</p></div></div>
+      <div id="safetyCards" class="cards"></div>
+      <ul class="safety-list">
+        <li>The server binds only to <code>127.0.0.1</code>.</li>
+        <li>A one-time bootstrap token becomes an HttpOnly browser session.</li>
+        <li>Mutations require exact same-origin requests and a custom request guard.</li>
+        <li>JavaScript cannot submit arbitrary shell commands or filesystem paths.</li>
+        <li>The WebUI starts only from the module Action button and is not a boot dependency.</li>
+      </ul>
     </section>
   </main>
   <script src="app.js"></script>
