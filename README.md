@@ -1,7 +1,7 @@
 # Boot Watch Collector
 
-> **Development pilot:** `0.2.11-webui-core-pilot.1` migrates the optional
-> read-only WebUI to shared core `0.2.1`. It is repository-verified but not yet
+> **Development pilot:** `0.2.11-webui-core-pilot.2` migrates the optional
+> read-only WebUI to shared core `0.2.2`. It is repository-verified but not yet
 > installed-runtime verified. Stable release and update metadata remain on
 > `0.2.10-webui-runtime-root-hotfix`.
 
