@@ -30,7 +30,7 @@ jobs:
       - name: Materialize exact shared core
         run: |
           set -euo pipefail
-          ./tools/materialize-webui-pilot.sh "$GITHUB_WORKSPACE/.webui-template"
+          bash ./tools/materialize-webui-pilot.sh "$GITHUB_WORKSPACE/.webui-template"
       - name: Commit materialized source
         run: |
           set -euo pipefail
