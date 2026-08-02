@@ -5,10 +5,7 @@ ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 cd "$ROOT"
 
 required=(
-  README.md
-  LICENSE
-  WEBUI_CREDITS.md
-  webui.lock
+  README.md LICENSE WEBUI_CREDITS.md webui.lock
   src/magisk-module/module.prop
   src/magisk-module/action.sh
   src/magisk-module/customize.sh
@@ -29,12 +26,8 @@ required=(
   docs/webui-core-pilot.md
   docs/VNEXT.md
 )
-
 for file in "${required[@]}"; do
-  [[ -s "$file" ]] || {
-    echo "FAIL missing_or_empty file=$file"
-    exit 1
-  }
+  [[ -s "$file" ]] || { echo "FAIL missing_or_empty file=$file"; exit 1; }
 done
 
 if find . -path ./.git -prune -o -type f -print0 |
@@ -49,15 +42,17 @@ for file in tools/verify-webui-pilot.sh tools/build-webui-pilot.sh tools/webui-i
   bash -n "$file"
 done
 
-for file in \
-  src/magisk-module/action.sh \
-  src/magisk-module/customize.sh \
-  src/magisk-module/service.sh \
-  src/magisk-module/uninstall.sh \
-  src/magisk-module/boot-watch.sh \
-  src/magisk-module/result-log-export.sh \
-  src/magisk-module/bin/module-control \
-  src/magisk-module/META-INF/com/google/android/update-binary; do
+android_scripts=(
+  src/magisk-module/action.sh
+  src/magisk-module/customize.sh
+  src/magisk-module/service.sh
+  src/magisk-module/uninstall.sh
+  src/magisk-module/boot-watch.sh
+  src/magisk-module/result-log-export.sh
+  src/magisk-module/bin/module-control
+  src/magisk-module/META-INF/com/google/android/update-binary
+)
+for file in "${android_scripts[@]}"; do
   head -n 1 "$file" | grep -Eq '^#!/(system/bin/sh|sbin/sh)$'
   [[ -x "$file" ]]
   sh -n "$file"
@@ -69,13 +64,21 @@ if grep -Fq 'set_perm "$MODPATH/META-INF/' src/magisk-module/customize.sh; then
 fi
 
 grep -Fxq 'id=boot-watch' src/magisk-module/module.prop
-grep -Fxq 'version=0.2.11-webui-core-pilot.1' src/magisk-module/module.prop
-grep -Fxq 'versionCode=36' src/magisk-module/module.prop
-grep -Fq 'core_version=0.2.1' webui.lock
-grep -Fq 'core_commit=cdb872d2afb9f86300dd26f6474820ab5de3efca' webui.lock
+grep -Fxq 'version=0.2.11-webui-core-pilot.2' src/magisk-module/module.prop
+grep -Fxq 'versionCode=37' src/magisk-module/module.prop
+grep -Fq 'core_version=0.2.2' webui.lock
+grep -Fq 'core_commit=5b8e412428cd04b1cf98a1fc0e03269580b60d71' webui.lock
 
 grep -Fq '/data/local/tmp/' src/magisk-module/action.sh
 grep -Fq -- '-token-file' src/magisk-module/action.sh
+[[ $(grep -Fc "sed 's/-//g' < /proc/sys/kernel/random/uuid" src/magisk-module/action.sh) -eq 2 ]] || {
+  echo "FAIL portable_uuid_filter_missing"
+  exit 1
+}
+if grep -Fq "tr -d '-\\n'" src/magisk-module/action.sh; then
+  echo "FAIL busybox_tr_leading_hyphen_token_filter"
+  exit 1
+fi
 if grep -Eq -- '(^|[[:space:]])-token([[:space:]]|$)' src/magisk-module/action.sh; then
   echo "FAIL token_passed_in_argv"
   exit 1
@@ -89,10 +92,7 @@ for forbidden in \
   src/magisk-module/webroot/boot-watch-logs.json \
   src/magisk-module/webroot/boot-watch-runs.json \
   src/magisk-module/webroot/style.css; do
-  [[ ! -e "$forbidden" ]] || {
-    echo "FAIL legacy_webui_file_present file=$forbidden"
-    exit 1
-  }
+  [[ ! -e "$forbidden" ]] || { echo "FAIL legacy_webui_file_present file=$forbidden"; exit 1; }
 done
 
 if grep -RInE 'https?://(cdn|unpkg|jsdelivr|fonts\.googleapis|google-analytics)' src/magisk-module/webroot; then
@@ -111,11 +111,7 @@ grep -Fq 'Array.isArray(status.summary)' src/magisk-module/webroot/app.js
 grep -Fq 'function applyFeatureVisibility()' src/magisk-module/webroot/app.js
 
 gofmt_output=$(gofmt -l webui-core/server)
-[[ -z "$gofmt_output" ]] || {
-  echo "FAIL gofmt"
-  printf '%s\n' "$gofmt_output"
-  exit 1
-}
+[[ -z "$gofmt_output" ]] || { echo "FAIL gofmt"; printf '%s\n' "$gofmt_output"; exit 1; }
 
 (
   cd webui-core
@@ -130,8 +126,7 @@ trap 'rm -rf "$tmp"' EXIT
 (
   cd webui-core
   CGO_ENABLED=0 GOOS=android GOARCH=arm64 go build \
-    -buildvcs=false \
-    -trimpath \
+    -buildvcs=false -trimpath \
     -o "$tmp/webui-server-arm64" \
     ./server/cmd/webui-server
 )
