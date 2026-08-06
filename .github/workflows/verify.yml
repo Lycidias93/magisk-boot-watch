@@ -2,17 +2,83 @@ name: verify
 
 on:
   push:
+    branches:
+      - main
   pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   verify:
+    name: verify
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - name: Verify release zip when present
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify shell syntax
+        shell: bash
         run: |
           set -euo pipefail
-          if [ -f releases/v0.2.0/magisk-boot-watch-v0.2.0.zip ]; then
-            bash tools/verify-magisk-boot-watch-v0.2.0.sh releases/v0.2.0/magisk-boot-watch-v0.2.0.zip
+          while IFS= read -r -d '' file; do
+            first="$(head -n 1 "$file")"
+            case "$first" in
+              *bash*) bash -n "$file" ;;
+              *) sh -n "$file" ;;
+            esac
+          done < <(find src/magisk-module tools -type f -name '*.sh' -print0)
+
+      - name: Verify module metadata and JSON
+        shell: bash
+        run: |
+          set -euo pipefail
+          prop='src/magisk-module/module.prop'
+          test -s "$prop"
+          grep -Eq '^id=[A-Za-z0-9._-]+$' "$prop"
+          grep -Eq '^version=.+$' "$prop"
+          grep -Eq '^versionCode=[0-9]+$' "$prop"
+          python3 -m json.tool update.json >/dev/null
+          for file in src/magisk-module/webroot/*.json; do
+            python3 -m json.tool "$file" >/dev/null
+          done
+
+      - name: Build current source package
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(sed -n 's/^version=//p' src/magisk-module/module.prop | head -n 1)"
+          test -n "$version"
+          safe_version="$(printf '%s' "$version" | tr -c 'A-Za-z0-9._+-' '_')"
+          mkdir -p ci-dist
+          archive="ci-dist/magisk-boot-watch-${safe_version}.zip"
+          (
+            cd src/magisk-module
+            zip -r9 "$GITHUB_WORKSPACE/$archive" .
+          )
+          unzip -tqq "$archive"
+          unzip -Z1 "$archive" | grep -Fxq 'module.prop'
+          unzip -Z1 "$archive" | grep -Fxq 'customize.sh'
+          unzip -Z1 "$archive" | grep -Fxq 'service.sh'
+          unzip -Z1 "$archive" | grep -Fxq 'boot-watch.sh'
+          unzip -Z1 "$archive" | grep -Fxq 'webroot/index.html'
+          sha256sum "$archive" | tee "${archive}.sha256"
+
+      - name: Verify package stays self-contained
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="$(find ci-dist -maxdepth 1 -type f -name '*.zip' -print -quit)"
+          test -n "$archive"
+          if unzip -Z1 "$archive" | grep -Eq '(^|/)\.git(/|$)|(^|/)releases(/|$)|(^|/)docs(/|$)'; then
+            echo 'FAIL forbidden development content in package'
+            exit 1
           fi
-          find src/magisk-module -name '*.sh' -print0 | xargs -0 -r sh -n
