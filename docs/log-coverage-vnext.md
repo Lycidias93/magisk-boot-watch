@@ -1,5 +1,18 @@
 # Boot Watch Collector log coverage and vNext plan
 
+## 2026-09-06 implementation
+
+Source candidate `0.2.11-vnext.1` implements the LSPosed/Vector support follow-up:
+
+- fixed alias discovery for `zygisk_lsposed`, `LSPosed`, `vector` and
+  `zygisk_vector`;
+- bounded lspd runtime and log metadata plus config-file counts without config
+  contents;
+- extended/debug-only Magisk DenyList snapshot;
+- protected status keys and read-only WebUI Core 0.6.3 status/inventory;
+- no manager app-private cache collection and no recursive LSPosed config dump.
+
+Stable promotion remains gated on exact-device post-reboot and WebUI audits.
 Status: 2026-06-06
 Baseline: v0.2.4 final verified
 

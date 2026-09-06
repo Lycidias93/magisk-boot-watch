@@ -1,5 +1,10 @@
 # Boot Watch Collector
 
+> **Development source candidate:** `0.2.11-vnext.1` / versionCode `36` is
+> repository scope only. Stable `update.json` remains on
+> `0.2.10-webui-runtime-root-hotfix` until exact-device post-reboot and WebUI
+> release audits pass. The candidate pins shared WebUI Core `0.6.3` at
+> `6791a05be79f162979c76a286f7cdbdd9ce1cc6b`.
 **Magisk module for Android boot evidence collection, protected result exports, read-only WebUI status, and boot-crash handoff bundles.**
 
 Stable **0.2.10-webui-runtime-root-hotfix** fixes the WebUI run-history exporter after the module moved to the current boot-watch runtime and protected result-file scheme. It is runtime-verified on Pixel after reboot with active old-prefix count 0, a PASS boot run, and populated WebUI run history.
@@ -7,6 +12,23 @@ Stable **0.2.10-webui-runtime-root-hotfix** fixes the WebUI run-history exporter
 [Download latest release](https://github.com/Lycidias93/magisk-boot-watch/releases/latest) · [Telegram](https://t.me/lycidias93) · [Issues](https://github.com/Lycidias93/magisk-boot-watch/issues) · [Release notes](RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Stable update metadata](update.json)
 
 ---
+
+## vNext source candidate
+
+The vNext candidate adds a bounded LSPosed / Vector support layer informed by
+`sojiagu/lsposed-bugreport` without adopting broad directory copies:
+
+- detects `zygisk_lsposed`, `LSPosed`, `vector` and `zygisk_vector` aliases;
+- records lspd service/runtime state and bounded current/rotated log metadata;
+- counts LSPosed config files but never reads or exports their contents;
+- excludes LSPosed Manager app-private caches;
+- collects `magisk --denylist ls` only in `extended` / `debug` or explicit
+  `PBW_COLLECT_ZYGISK_SUPPORT=1` mode;
+- exports machine-readable Zygisk-stack state through protected `pixel_local__*`
+  results;
+- exposes the same bounded state in a read-only shared WebUI Core inventory.
+
+The WebUI is loopback-only, user-triggered and not a boot dependency.
 
 ## What this module does
 

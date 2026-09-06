@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased — 0.2.11-vnext.1
+
+- Pins shared standalone WebUI Core 0.6.3 at
+  `6791a05be79f162979c76a286f7cdbdd9ce1cc6b` and replaces generated WebUI
+  JSON/export wrappers with the typed loopback Core transport.
+- Adds read-only Zygisk-stack summary cards plus a dedicated LSPosed / Vector
+  inventory.
+- Adds bounded LSPosed/Vector alias discovery, lspd runtime/log metadata and
+  extended/debug-only Magisk DenyList collection.
+- Keeps LSPosed config contents and manager app-private caches out of collection.
+- Aligns collector runtime `VERSION_CODE` with candidate `module.prop` at 36.
+- Keeps stable `update.json` unchanged pending exact-device post-reboot and WebUI
+  release audits.
 ## v0.2.10 - 2026-07-08
 
 - Fixes Boot Watch WebUI run history after the module id/runtime rename by aligning WebUI exporters with protected result files named `pixel_local__boot-watch-*`.
