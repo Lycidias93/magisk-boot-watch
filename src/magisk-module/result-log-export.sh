@@ -69,6 +69,18 @@ esac
   echo "pbw_pstore_files=$(grep_summary pstore_files)"
   echo "pbw_split_logcat_files=$(grep_summary split_logcat_files)"
   echo "pbw_focused_dumpsys_files=$(grep_summary focused_dumpsys_files)"
+  echo "pbw_zygisk_support_profile=$(grep_summary zygisk_support_profile)"
+  echo "pbw_zygisk_stack_overall=$(grep_summary zygisk_stack_overall)"
+  echo "pbw_lsposed_present=$(grep_summary lsposed_present)"
+  echo "pbw_lsposed_module_aliases=$(grep_summary lsposed_module_aliases)"
+  echo "pbw_lspd_service=$(grep_summary lspd_service)"
+  echo "pbw_lspd_log_files=$(grep_summary lspd_log_files)"
+  echo "pbw_lspd_rotated_log_files=$(grep_summary lspd_rotated_log_files)"
+  echo "pbw_lspd_config_files=$(grep_summary lspd_config_files)"
+  echo "pbw_vector_present=$(grep_summary vector_present)"
+  echo "pbw_vector_module_aliases=$(grep_summary vector_module_aliases)"
+  echo "pbw_magisk_denylist_state=$(grep_summary magisk_denylist_state)"
+  echo "pbw_magisk_denylist_entries=$(grep_summary magisk_denylist_entries)"
   echo "pbw_generated=$(date +%Y-%m-%dT%H:%M:%S%z)"
 } > "$STATUS_TMP" 2>/dev/null || true
 mv -f "$STATUS_TMP" "$STATUS"
@@ -131,6 +143,11 @@ mv -f "$STATUS_TMP" "$STATUS"
   echo "## zygisk/art focus"
   sed -n '1,220p' "$RUN/zygisk/dex2oat_overlay.txt" 2>/dev/null || true
   sed -n '1,220p' "$RUN/art/package_dexopt.txt" 2>/dev/null || true
+  echo
+  echo "## zygisk stack support"
+  sed -n '1,220p' "$RUN/zygisk_stack/summary.txt" 2>/dev/null || echo "missing_zygisk_stack_summary=yes"
+  echo
+  sed -n '1,220p' "$RUN/zygisk_stack/inventory.txt" 2>/dev/null || true
   echo
   echo "## module runtime logs"
   sed -n '1,260p' "$RUN/module_runtime/known_modules.txt" 2>/dev/null || echo "missing_module_runtime_summary=yes"
