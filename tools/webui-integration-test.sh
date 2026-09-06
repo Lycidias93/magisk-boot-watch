@@ -5,6 +5,9 @@ TMP=$(mktemp -d)
 PID=""
 cleanup(){ if [[ -n "$PID" ]]; then kill "$PID" 2>/dev/null || true; wait "$PID" 2>/dev/null || true; fi; rm -rf "$TMP"; }
 trap cleanup EXIT
+diag_fail(){ rc=$?; line=$1; echo "integration_failure_line=$line rc=$rc"; if [[ -f "$TMP/server.log" ]]; then tail -n 80 "$TMP/server.log"; fi; exit "$rc"; }
+trap 'diag_fail $LINENO' ERR
+echo "integration_phase=fixture_setup"
 cp -a "$ROOT/src/magisk-module" "$TMP/module"
 sed -i '1s|^#!/system/bin/sh$|#!/bin/sh|' "$TMP/module/bin/module-control"
 mkdir -p "$TMP/state/runs" "$TMP/runtime" "$TMP/download"
@@ -46,7 +49,9 @@ pbw_mode=extended
 pbw_version=0.2.11-vnext.1
 EOF
 printf 'service_start=fixture\nmodule=boot-watch\nversion=0.2.11-vnext.1\n' > "$TMP/state/service-launch.log"
+echo "integration_phase=server_build"
 (cd "$ROOT/webui-core" && go build -buildvcs=false -trimpath -o "$TMP/webui-server" ./server/cmd/webui-server)
+echo "integration_phase=server_start"
 TOKEN=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
 printf "%s\n" "$TOKEN" > "$TMP/runtime/bootstrap.token"
 chmod 0600 "$TMP/runtime/bootstrap.token"
@@ -57,6 +62,7 @@ PORT=$(sed -n 's/.*"port":[[:space:]]*\([0-9][0-9]*\).*/\1/p' "$TMP/runtime/stat
 [[ "$PORT" =~ ^[0-9]+$ ]]
 BASE="http://127.0.0.1:$PORT"
 COOKIE="$TMP/cookies.txt"
+echo "integration_phase=health_bootstrap_assets"
 curl -fsS "$BASE/api/v1/health" | grep -Fq '"ok":true'
 cmdline=$(tr "\000" " " < "/proc/$PID/cmdline")
 ! grep -Fq "$TOKEN" <<< "$cmdline"
@@ -64,6 +70,7 @@ cmdline=$(tr "\000" " " < "/proc/$PID/cmdline")
 [[ ! -e "$TMP/runtime/bootstrap.token" ]]
 [[ "$(curl -sS -o /dev/null -w "%{http_code}" "$BASE/bootstrap?token=$TOKEN")" == 403 ]]
 for asset in app.css race-guard.css observability.css embedded-host-bootstrap.js race-guard.js observability.js mobile-input-viewport.js app.js v03.js v04.js; do curl -fsS -b "$COOKIE" "$BASE/$asset" >/dev/null; done
+echo "integration_phase=capabilities_status"
 caps=$(curl -fsS -b "$COOKIE" "$BASE/api/v1/capabilities")
 grep -Fq '"config":false' <<<"$caps"
 grep -Fq '"actions":false' <<<"$caps"
@@ -75,6 +82,7 @@ grep -Fq '"label":"Zygisk stack"' <<<"$status"
 grep -Fq '"value":"ready"' <<<"$status"
 grep -Fq '"label":"LSPosed"' <<<"$status"
 grep -Fq '"label":"Vector"' <<<"$status"
+echo "integration_phase=logs_inventories"
 log=$(curl -fsS -b "$COOKIE" "$BASE/api/v1/log?lines=300")
 grep -Fq 'pbw_result=PASS' <<<"$log"
 ! grep -Fq 'SHOULD_NOT_LEAK' <<<"$log"
@@ -84,6 +92,7 @@ zyg=$(curl -fsS -b "$COOKIE" "$BASE/api/v1/inventory?name=zygisk_stack")
 grep -Fq 'LSPosed / lspd' <<<"$zyg"
 grep -Fq 'config contents not collected' <<<"$zyg"
 curl -fsS -b "$COOKIE" "$BASE/api/v1/inventory?name=evidence" | grep -Fq '"name":"Status ENV"'
+echo "integration_phase=negative_security"
 for endpoint in config action jobs; do code=$(curl -sS -b "$COOKIE" -o /dev/null -w "%{http_code}" "$BASE/api/v1/$endpoint"); [[ "$code" == 404 || "$code" == 405 ]]; done
 [[ "$(curl -sS -o /dev/null -w "%{http_code}" "$BASE/api/v1/status")" == 401 ]]
 origin_code=$(curl -sS -b "$COOKIE" -H "Origin: http://evil.invalid" -H "X-WebUI-Request: 1" -H "Content-Type: application/json" -d '{"name":"x"}' -o /dev/null -w "%{http_code}" "$BASE/api/v1/jobs")
