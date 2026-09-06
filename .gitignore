@@ -3,3 +3,8 @@
 *.bak
 .work/
 .DS_Store
+build/
+dist/
+ci-dist/
+__pycache__/
+*.py[cod]
