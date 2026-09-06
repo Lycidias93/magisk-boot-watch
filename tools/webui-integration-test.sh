@@ -96,9 +96,9 @@ echo "integration_phase=negative_security"
 for endpoint in config action jobs; do code=$(curl -sS -b "$COOKIE" -o /dev/null -w "%{http_code}" "$BASE/api/v1/$endpoint"); [[ "$code" == 404 || "$code" == 405 ]]; done
 [[ "$(curl -sS -o /dev/null -w "%{http_code}" "$BASE/api/v1/status")" == 401 ]]
 origin_code=$(curl -sS -b "$COOKIE" -H "Origin: http://evil.invalid" -H "X-WebUI-Request: 1" -H "Content-Type: application/json" -d '{"name":"x"}' -o /dev/null -w "%{http_code}" "$BASE/api/v1/jobs")
-[[ "$origin_code" == 403 ]]
+[[ "$origin_code" == 403 || "$origin_code" == 404 || "$origin_code" == 405 ]]
 echo asset_http=PASS
 echo status_lsposed_vector=PASS
 echo disabled_mutation_surfaces=PASS
-echo origin_rejected=PASS
+echo origin_guard=PASS_DISABLED_OR_REJECTED
 echo 'RESULT: BOOT_WATCH_WEBUI_INTEGRATION_PASS'

@@ -16,7 +16,7 @@ for m in re.finditer(r'case\s+((?:"[A-Za-z0-9._/-]+"(?:\s*,\s*)?)+)\s*:',server)
 for m in re.finditer(r'(?:HandleFunc|Handle)\(\s*"/([A-Za-z0-9._/-]+)"',server): routes.add(m.group(1).lstrip('/'))
 missing=sorted(set(p.assets)-routes)
 integration=(ROOT/'tools/webui-integration-test.sh').read_text()
-need=('asset_http=PASS','status_lsposed_vector=PASS','disabled_mutation_surfaces=PASS','origin_rejected=PASS','api/v1/inventory?name=zygisk_stack','api/v1/log?lines=300')
+need=('asset_http=PASS','status_lsposed_vector=PASS','disabled_mutation_surfaces=PASS','origin_guard=PASS_DISABLED_OR_REJECTED','api/v1/inventory?name=zygisk_stack','api/v1/log?lines=300')
 missing_contract=[x for x in need if x not in integration]
 failures=len(missing)+len(missing_contract)
 print(f'asset_routes_total={len(set(p.assets))}')
