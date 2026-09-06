@@ -1,0 +1,10 @@
+webui-core/CORE_VERSION	CORE_VERSION	844f6a91acb92e5f4c58fe0d440fba8deea2a8c8
+webui-core/go.mod	go.mod	2c5e5017c98adb89438d3bdd6a777ec942a7eab7
+webui-core/core/manifest.txt	core/manifest.txt	185e4bbe35c2106b5df42a53efa15bb739f28f1d
+webui-core/server/cmd/webui-server/main.go	server/cmd/webui-server/main.go	c4437e7746cfdba720baf8c948adecb1ffc2eb73
+webui-core/server/cmd/webui-server/main_test.go	server/cmd/webui-server/main_test.go	e917201747117617a29a890fe99a07500faf9c81
+webui-core/server/cmd/webui-server/v03.go	server/cmd/webui-server/v03.go	8b5a824b95e44f8142c510b01177f91468fc63e5
+webui-core/server/cmd/webui-server/v03_collection_digest.go	server/cmd/webui-server/v03_collection_digest.go	022670c34a3f1aad25e64d41eb09b6b730d4f731
+webui-core/server/cmd/webui-server/v03_test.go	server/cmd/webui-server/v03_test.go	253ecab77fb2761eef3ec95d05c9b9b1fdd48cee
+webui-core/server/cmd/webui-server/v04.go	server/cmd/webui-server/v04.go	b2bd85b7b3a5d8d07bd60f7624c4df9271fd83c1
+webui-core/server/cmd/webui-server/v04_test.go	server/cmd/webui-server/v04_test.go	cc1f7cee79e92451b7bcbf471b63b8e8c703b74b

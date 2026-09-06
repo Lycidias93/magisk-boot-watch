@@ -1,12 +1,12 @@
 #!/system/bin/sh
-# Boot Watch Collector v0.2.10-webui-runtime-root-hotfix comprehensive one-shot collector
+# Boot Watch Collector 0.2.11-vnext.1 comprehensive one-shot collector
 # Bounded, local-only, no daemon after completion.
 
 MOD="/data/adb/modules/boot-watch"
 RT="/data/adb/boot-watch"
 DL="/storage/emulated/0/Download"
-VERSION="0.2.10-webui-runtime-root-hotfix"
-VERSION_CODE="28"
+VERSION="0.2.11-vnext.1"
+VERSION_CODE="36"
 PROFILE="${PBW_PROFILE:-standard}"
 MAX_SECONDS="${PBW_MAX_SECONDS:-360}"
 MAX_FILES="${PBW_MAX_FILES:-80}"
@@ -167,7 +167,7 @@ if [ "$logd_before" = "stopped" ]; then
 fi
 
 stage "static_core"
-mkdir -p "$RUN/boot" "$RUN/magisk" "$RUN/modules" "$RUN/zygisk" "$RUN/lsposed" "$RUN/art" "$RUN/binder" "$RUN/audio_safe" "$RUN/rescue" "$RUN/ashlooper_intervention" "$RUN/pstore" "$RUN/dumpsys" "$RUN/module_runtime" "$RUN/dispatcher" "$RUN/thermal" "$RUN/power" "$RUN/network" "$RUN/service_d" "$RUN/storage" "$RUN/memory" "$RUN/kernel" "$RUN/logcat" "$RUN/logcat_split" "$RUN/anr" "$RUN/tombstones" "$RUN/dropbox"
+mkdir -p "$RUN/boot" "$RUN/magisk" "$RUN/modules" "$RUN/zygisk_stack" "$RUN/zygisk" "$RUN/lsposed" "$RUN/art" "$RUN/binder" "$RUN/audio_safe" "$RUN/rescue" "$RUN/ashlooper_intervention" "$RUN/pstore" "$RUN/dumpsys" "$RUN/module_runtime" "$RUN/dispatcher" "$RUN/thermal" "$RUN/power" "$RUN/network" "$RUN/service_d" "$RUN/storage" "$RUN/memory" "$RUN/kernel" "$RUN/logcat" "$RUN/logcat_split" "$RUN/anr" "$RUN/tombstones" "$RUN/dropbox"
 
 run_file "$RUN/boot/core.txt" "date -Is; uptime; id; getenforce 2>/dev/null || true; getprop sys.boot_completed; getprop dev.bootcomplete; getprop ro.boot.bootreason; getprop ro.boot.verifiedbootstate; getprop ro.boot.flash.locked; getprop ro.boot.vbmeta.device_state; getprop ro.boot.slot_suffix; getprop ro.build.fingerprint; getprop ro.build.version.release; getprop ro.build.version.sdk"
 run_file "$RUN/boot/props_focus.txt" "getprop | grep -Ei 'boot|zygisk|magisk|dex2oat|art|thermal|wifi|radio|telephony|net.dns|lmk|memory|safety|debug' | head -n $MAX_LINES"
@@ -443,7 +443,115 @@ collect_module_runtime_logs() {
   [ -n "$old_modules" ] && tail_file "$old_modules" "$RUN/module_runtime/lsposed_log_old/$(basename "$old_modules").txt" 600
   [ -n "$old_verbose" ] && tail_file "$old_verbose" "$RUN/module_runtime/lsposed_log_old/$(basename "$old_verbose").txt" 600
 }
+collect_zygisk_stack_support() {
+  stage "zygisk_stack_support"
+  mkdir -p "$RUN/zygisk_stack"
+  summary="$RUN/zygisk_stack/summary.txt"
+  inventory="$RUN/zygisk_stack/inventory.txt"
+  denylist="$RUN/zygisk_stack/magisk_denylist.txt"
+
+  append_alias() {
+    current="$1"
+    value="$2"
+    if [ "$current" = "none" ]; then printf "%s" "$value"; else printf "%s,%s" "$current" "$value"; fi
+  }
+
+  lsposed_aliases=none
+  vector_aliases=none
+  [ -d /data/adb/modules/zygisk_lsposed ] && lsposed_aliases="$(append_alias "$lsposed_aliases" zygisk_lsposed)"
+  [ -d /data/adb/modules/LSPosed ] && lsposed_aliases="$(append_alias "$lsposed_aliases" LSPosed)"
+  [ -d /data/adb/modules/vector ] && vector_aliases="$(append_alias "$vector_aliases" vector)"
+  [ -d /data/adb/modules/zygisk_vector ] && vector_aliases="$(append_alias "$vector_aliases" zygisk_vector)"
+
+  lspd_runtime_present=no
+  [ -d /data/adb/lspd ] && lspd_runtime_present=yes
+  lspd_service="$(getprop init.svc.lspd 2>/dev/null || true)"
+  [ -n "$lspd_service" ] || lspd_service=unknown
+  lspd_pid="$(pidof lspd 2>/dev/null | head -c 128 || true)"
+  [ -n "$lspd_pid" ] || lspd_pid=none
+  lspd_log_files="$(find /data/adb/lspd/log -maxdepth 1 -type f 2>/dev/null | wc -l | tr -d " ")"
+  lspd_rotated_log_files="$(find /data/adb/lspd/log.old -maxdepth 1 -type f 2>/dev/null | wc -l | tr -d " ")"
+  lspd_config_files="$(find /data/adb/lspd/config -maxdepth 1 -type f 2>/dev/null | wc -l | tr -d " ")"
+  [ -n "$lspd_log_files" ] || lspd_log_files=0
+  [ -n "$lspd_rotated_log_files" ] || lspd_rotated_log_files=0
+  [ -n "$lspd_config_files" ] || lspd_config_files=0
+
+  lsposed_present=no
+  if [ "$lspd_runtime_present" = yes ] || [ "$lsposed_aliases" != none ]; then lsposed_present=yes; fi
+  vector_present=no
+  [ "$vector_aliases" != none ] && vector_present=yes
+
+  zygisk_stack_overall=not_detected
+  if [ "$lsposed_present" = yes ]; then
+    if [ "$lspd_service" = running ] || [ "$lspd_pid" != none ]; then zygisk_stack_overall=ready; else zygisk_stack_overall=attention; fi
+  elif [ "$vector_present" = yes ]; then
+    zygisk_stack_overall=detected
+  fi
+
+  support_profile=metadata_only
+  collect_sensitive=0
+  case "$PROFILE" in extended|debug) collect_sensitive=1 ;; esac
+  [ "${PBW_COLLECT_ZYGISK_SUPPORT:-0}" = 1 ] && collect_sensitive=1
+  denylist_state=skipped_profile_gate
+  denylist_entries=0
+  if [ "$collect_sensitive" = 1 ]; then
+    support_profile=extended
+    if command -v magisk >/dev/null 2>&1; then
+      if magisk --denylist ls > "$denylist" 2>&1; then
+        denylist_state=collected
+        denylist_entries="$(grep -cve "^[[:space:]]*$" "$denylist" 2>/dev/null || true)"
+      else
+        denylist_state=command_failed
+      fi
+    else
+      denylist_state=magisk_cli_missing
+    fi
+  fi
+
+  {
+    echo "zygisk_stack_inventory_time=$(date +%Y-%m-%dT%H:%M:%S%z)"
+    for d in /data/adb/modules/zygisk_lsposed /data/adb/modules/LSPosed /data/adb/modules/vector /data/adb/modules/zygisk_vector; do
+      [ -d "$d" ] || continue
+      echo "--- module_path=$d ---"
+      grep -E "^(id|name|version|versionCode|description)=" "$d/module.prop" 2>/dev/null || true
+      [ -e "$d/disable" ] && echo "disable=present" || echo "disable=absent"
+      [ -e "$d/remove" ] && echo "remove=present" || echo "remove=absent"
+    done
+    for logdir in /data/adb/lspd/log /data/adb/lspd/log.old; do
+      [ -d "$logdir" ] || continue
+      echo "--- log_dir=$logdir ---"
+      find "$logdir" -maxdepth 1 -type f 2>/dev/null | sort | head -n 40 | while IFS= read -r f; do
+        bytes="$(wc -c < "$f" 2>/dev/null || echo 0)"
+        modified="$(date -r "$f" +%Y-%m-%dT%H:%M:%S%z 2>/dev/null || true)"
+        echo "file bytes=$bytes modified=$modified path=$f"
+      done
+    done
+    echo "privacy=lspd_config_contents_not_collected"
+    echo "privacy=manager_app_private_cache_not_collected"
+  } > "$inventory" 2>&1 || true
+
+  {
+    echo "zygisk_stack_time=$(date +%Y-%m-%dT%H:%M:%S%z)"
+    echo "zygisk_support_profile=$support_profile"
+    echo "zygisk_stack_overall=$zygisk_stack_overall"
+    echo "lsposed_present=$lsposed_present"
+    echo "lsposed_module_aliases=$lsposed_aliases"
+    echo "lspd_runtime_present=$lspd_runtime_present"
+    echo "lspd_service=$lspd_service"
+    echo "lspd_pid_present=$( [ "$lspd_pid" = none ] && echo no || echo yes )"
+    echo "lspd_log_files=$lspd_log_files"
+    echo "lspd_rotated_log_files=$lspd_rotated_log_files"
+    echo "lspd_config_files=$lspd_config_files"
+    echo "lspd_config_contents_collected=no"
+    echo "vector_present=$vector_present"
+    echo "vector_module_aliases=$vector_aliases"
+    echo "magisk_denylist_state=$denylist_state"
+    echo "magisk_denylist_entries=$denylist_entries"
+    echo "manager_private_cache_collected=no"
+  } > "$summary" 2>&1 || true
+}
 collect_ashlooper_health
+collect_zygisk_stack_support
 collect_diagnostics_vnext_bundle
 collect_module_runtime_logs
 run_file "$RUN/dispatcher/pixel_drop_dispatch_status.txt" "if [ -d /data/adb/pixel-drop-dispatch ]; then find /data/adb/pixel-drop-dispatch -maxdepth 3 -type f -name '*.log' 2>/dev/null | sort | tail -30; echo; tail -160 /data/adb/pixel-drop-dispatch/log/health.log 2>/dev/null || tail -160 /data/adb/pixel-drop-dispatch/health.log 2>/dev/null || true; echo; tail -160 /data/adb/pixel-drop-dispatch/log/dispatch.log 2>/dev/null || tail -160 /data/adb/pixel-drop-dispatch/dispatch.log 2>/dev/null || true; else echo runtime_present=no; fi"
@@ -514,6 +622,18 @@ module_logs_missing_because_disabled="$(grep -E '^module_logs_missing_because_di
 pstore_files="$(find "$RUN/pstore/files" -type f 2>/dev/null | wc -l | tr -d ' ')"
 split_logcat_files="$(find "$RUN/logcat_split" -type f 2>/dev/null | wc -l | tr -d ' ')"
 focused_dumpsys_files="$(find "$RUN/dumpsys" -type f 2>/dev/null | wc -l | tr -d ' ')"
+zygisk_support_profile="$(grep -E '^zygisk_support_profile=' "$RUN/zygisk_stack/summary.txt" 2>/dev/null | tail -1 | cut -d= -f2-)"
+zygisk_stack_overall="$(grep -E '^zygisk_stack_overall=' "$RUN/zygisk_stack/summary.txt" 2>/dev/null | tail -1 | cut -d= -f2-)"
+lsposed_present="$(grep -E '^lsposed_present=' "$RUN/zygisk_stack/summary.txt" 2>/dev/null | tail -1 | cut -d= -f2-)"
+lsposed_module_aliases="$(grep -E '^lsposed_module_aliases=' "$RUN/zygisk_stack/summary.txt" 2>/dev/null | tail -1 | cut -d= -f2-)"
+lspd_service="$(grep -E '^lspd_service=' "$RUN/zygisk_stack/summary.txt" 2>/dev/null | tail -1 | cut -d= -f2-)"
+lspd_log_files="$(grep -E '^lspd_log_files=' "$RUN/zygisk_stack/summary.txt" 2>/dev/null | tail -1 | cut -d= -f2-)"
+lspd_rotated_log_files="$(grep -E '^lspd_rotated_log_files=' "$RUN/zygisk_stack/summary.txt" 2>/dev/null | tail -1 | cut -d= -f2-)"
+lspd_config_files="$(grep -E '^lspd_config_files=' "$RUN/zygisk_stack/summary.txt" 2>/dev/null | tail -1 | cut -d= -f2-)"
+vector_present="$(grep -E '^vector_present=' "$RUN/zygisk_stack/summary.txt" 2>/dev/null | tail -1 | cut -d= -f2-)"
+vector_module_aliases="$(grep -E '^vector_module_aliases=' "$RUN/zygisk_stack/summary.txt" 2>/dev/null | tail -1 | cut -d= -f2-)"
+magisk_denylist_state="$(grep -E '^magisk_denylist_state=' "$RUN/zygisk_stack/summary.txt" 2>/dev/null | tail -1 | cut -d= -f2-)"
+magisk_denylist_entries="$(grep -E '^magisk_denylist_entries=' "$RUN/zygisk_stack/summary.txt" 2>/dev/null | tail -1 | cut -d= -f2-)"
 {
   echo "Boot Watch Collector v$VERSION comprehensive summary"
   echo "version=$VERSION"
@@ -543,6 +663,18 @@ focused_dumpsys_files="$(find "$RUN/dumpsys" -type f 2>/dev/null | wc -l | tr -d
   echo "pstore_files=${pstore_files:-0}"
   echo "split_logcat_files=${split_logcat_files:-0}"
   echo "focused_dumpsys_files=${focused_dumpsys_files:-0}"
+  echo "zygisk_support_profile=${zygisk_support_profile:-unknown}"
+  echo "zygisk_stack_overall=${zygisk_stack_overall:-unknown}"
+  echo "lsposed_present=${lsposed_present:-unknown}"
+  echo "lsposed_module_aliases=${lsposed_module_aliases:-none}"
+  echo "lspd_service=${lspd_service:-unknown}"
+  echo "lspd_log_files=${lspd_log_files:-0}"
+  echo "lspd_rotated_log_files=${lspd_rotated_log_files:-0}"
+  echo "lspd_config_files=${lspd_config_files:-0}"
+  echo "vector_present=${vector_present:-unknown}"
+  echo "vector_module_aliases=${vector_module_aliases:-none}"
+  echo "magisk_denylist_state=${magisk_denylist_state:-unknown}"
+  echo "magisk_denylist_entries=${magisk_denylist_entries:-0}"
   echo "ashrexcue_safe_files=$ash_count"
   echo "module_runtime_files=$module_runtime_count"
   echo "frosty_log_files=$frosty_log_count"

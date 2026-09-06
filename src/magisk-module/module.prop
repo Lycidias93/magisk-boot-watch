@@ -1,7 +1,7 @@
 id=boot-watch
 name=Boot Watch Collector
-version=0.2.10-webui-runtime-root-hotfix
-versionCode=35
+version=0.2.11-vnext.1
+versionCode=36
 author=Lycidias93 / ChatGPT
 updateJson=https://raw.githubusercontent.com/Lycidias93/magisk-boot-watch/main/update.json
-description=Boot Watch Collector 0.2.10-webui-runtime-root-hotfix with polished read-only WebUI, corrected wrapper label, valid JSON logs and run history.
+description=Boot Watch vNext with bounded LSPosed/Vector support evidence and shared standalone WebUI Core 0.6.3; stable update channel remains on v0.2.10 until device audit.

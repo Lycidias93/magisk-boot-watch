@@ -1,0 +1,7 @@
+webui-core/scripts/webui-contract-test.py	scripts/webui-contract-test.py	841644a1fe8659c358dd83457c7b62131d7ff61c
+webui-core/scripts/webui-release-audit.py	scripts/webui-release-audit.py	357a9b78463911329b6f2686f80d0d9b68b92993
+webui-core/scripts/webui-race-regression.test.mjs	scripts/webui-race-regression.test.mjs	742ae44ae676c185cdd856e195e8d16ddcebbf6a
+webui-core/scripts/webui-embedded-host-bootstrap.test.mjs	scripts/webui-embedded-host-bootstrap.test.mjs	c1087fb417aace81e34af6abffd3ae75e68bf6bd
+webui-core/scripts/webui-mobile-input-viewport.test.mjs	scripts/webui-mobile-input-viewport.test.mjs	4ba02b2fe2e3f1686d9eba3324c9f52bb6d3996c
+webui-core/scripts/webui-v04-static.test.py	scripts/webui-v04-static.test.py	300d9778ef393ed33fde8e194251a22aa32c8aed
+webui-core/scripts/webui-observability-static.test.py	scripts/webui-observability-static.test.py	34b77271b89858fa17c69128daea1076ac301d98

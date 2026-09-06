@@ -1,0 +1,12 @@
+src/magisk-module/action.sh	module/action.sh	895c34cfac29b99ca359e32b79738bf8de391ecd
+src/magisk-module/webroot/index.html	module/webroot/index.html	018520e089e34f3c6bd9f5d52c107c29c28f3c5f
+src/magisk-module/webroot/embedded-host-bootstrap.js	module/webroot/embedded-host-bootstrap.js	895e67570eb7a942cc38e4af05205e199cf959fb
+src/magisk-module/webroot/mobile-input-viewport.js	module/webroot/mobile-input-viewport.js	a863554e6f23e052d82e981e78aafa30c2cf0db4
+src/magisk-module/webroot/app.js	module/webroot/app.js	99c45400df31b35069a25f9c42e24a93c805f421
+src/magisk-module/webroot/app.css	module/webroot/app.css	81e6ad5962f006f5b00286f7a072dcc8328947dc
+src/magisk-module/webroot/race-guard.js	module/webroot/race-guard.js	7fb96452e663acdcc67ec7b0b1cea64db4985063
+src/magisk-module/webroot/race-guard.css	module/webroot/race-guard.css	ba9d473ee2873ffc583785115573c78917df285c
+src/magisk-module/webroot/observability.js	module/webroot/observability.js	57566d2009d8a1e3181ee537487250bc42a40082
+src/magisk-module/webroot/observability.css	module/webroot/observability.css	3e0e9e3d3cb61f100644d7b1e92ac02876a4f5e7
+src/magisk-module/webroot/v03.js	module/webroot/v03.js	d6dfe510959e4dd7968134e81148302765cf90c7
+src/magisk-module/webroot/v04.js	module/webroot/v04.js	df659077332cc47632ef9d347d6ff02565f29ded

@@ -1,65 +1,210 @@
 #!/system/bin/sh
-# BOOT_WATCH_WEBUI_V028_ACTION_WRAPPER_START
-# Safety: Boot-Watch-only, WebUI read-only exports, no host/SSH/route/DNS actions.
-set +e
-MODDIR="${0%/*}"
-export MODDIR
-ORIG="$MODDIR/tools/action.original-before-webui-wrapper.sh"
-STATEXP="$MODDIR/tools/boot-watch-webui-status-export.sh"
-LOGEXP="$MODDIR/tools/boot-watch-webui-log-export.sh"
-LOG="$MODDIR/action.webui-wrapper-last.log"
-TMP="$LOG.tmp.$$"
+set -u
+umask 077
 
-printf '%s\n' "BOOT_WATCH_WEBUI_ACTION_WRAPPER version=0.2.10-webui-runtime-root-hotfix"
-printf '%s\n' "scope=bootwatch_only"
-printf '%s\n' "routeguard=no DNS/HA/VIP/default-route/static-route/MagicDNS/subnet-route change"
+MODDIR=${0%/*}
+PROP="$MODDIR/module.prop"
+MODULE_ID=$(sed -n 's/^id=//p' "$PROP" 2>/dev/null | head -n 1)
+case "$MODULE_ID" in
+  ""|*[!A-Za-z0-9._-]*)
+    echo "ERROR: invalid module id"
+    echo "RESULT: WEBUI_ACTION_OPEN_FAILED outcome=command_failed command_exit_code=1 workflow_exit_code=1 reason=invalid_module_id"
+    exit 1
+    ;;
+esac
 
-orig_rc=127
-if [ -f "$ORIG" ]; then
-  sh "$ORIG" > "$TMP" 2>&1
-  orig_rc=$?
-  cat "$TMP"
-else
-  printf '%s\n' "WARN original_action_missing"
-  : > "$TMP"
-fi
-mv -f "$TMP" "$LOG" 2>/dev/null || true
+SERVER="$MODDIR/bin/webui-server-arm64"
+CONTROL="$MODDIR/bin/module-control"
+STATE_DIR="/data/adb/$MODULE_ID"
+RUNTIME_DIR="/data/local/tmp/${MODULE_ID}-webui"
+PID_FILE="$RUNTIME_DIR/server.pid"
+READY_FILE="$RUNTIME_DIR/server.ready.json"
+TOKEN_FILE="$RUNTIME_DIR/bootstrap.token"
+LOG_FILE="$RUNTIME_DIR/server.log"
+SERVER_PID=""
+MODE=${1:-open}
 
-webui_rc=127
-if [ -x "$STATEXP" ]; then
-  sh "$STATEXP"
-  webui_rc=$?
-fi
-printf '%s\n' "webui_export_rc=$webui_rc"
+pid_alive() {
+  pid=$1
+  case "$pid" in ""|*[!0-9]*) return 1 ;; esac
+  kill -0 "$pid" 2>/dev/null
+}
 
-log_rc=127
-if [ -x "$LOGEXP" ]; then
-  sh "$LOGEXP"
-  log_rc=$?
-fi
-printf '%s\n' "log_export_rc=$log_rc"
-printf '%s\n' "original_action_rc=$orig_rc"
+is_our_pid() {
+  pid=$1
+  case "$pid" in ""|*[!0-9]*) return 1 ;; esac
+  [ -r "/proc/$pid/cmdline" ] || return 1
+  tr '\000' ' ' < "/proc/$pid/cmdline" 2>/dev/null | grep -Fq "$SERVER"
+}
 
-if [ "$webui_rc" = 0 ] && [ "$log_rc" = 0 ] && [ "$orig_rc" = 2 ]; then
-  if grep -q 'reason=no_result_export' "$LOG" 2>/dev/null; then
-    printf '%s\n' "WARN legacy_action_no_result_export_treated_as_webui_refresh_only"
-    printf '%s\n' "RESULT: BOOT_WATCH_WEBUI_ACTION_REFRESH_DONE rc=0 reason=legacy_no_result_export"
-    exit 0
+stop_server() {
+  [ -f "$PID_FILE" ] || return 0
+  old_pid=$(cat "$PID_FILE" 2>/dev/null || true)
+  if is_our_pid "$old_pid"; then
+    kill "$old_pid" 2>/dev/null || true
+    count=0
+    while is_our_pid "$old_pid" && [ "$count" -lt 20 ]; do
+      count=$((count + 1))
+      sleep 0.1
+    done
+    is_our_pid "$old_pid" && kill -9 "$old_pid" 2>/dev/null || true
   fi
+  rm -f "$PID_FILE" "$READY_FILE" "$TOKEN_FILE"
+}
+
+fail() {
+  reason=$1
+  if [ -n "$SERVER_PID" ] && is_our_pid "$SERVER_PID"; then
+    kill "$SERVER_PID" 2>/dev/null || true
+  fi
+  rm -f "$PID_FILE" "$READY_FILE" "$TOKEN_FILE"
+  echo "ERROR: $reason"
+  echo "RESULT: WEBUI_ACTION_OPEN_FAILED outcome=command_failed command_exit_code=1 workflow_exit_code=1 reason=$reason"
+  exit 1
+}
+
+make_token() {
+  if [ -r /proc/sys/kernel/random/uuid ]; then
+    first=$(sed 's/-//g' < /proc/sys/kernel/random/uuid)
+    second=$(sed 's/-//g' < /proc/sys/kernel/random/uuid)
+    printf '%s%s\n' "$first" "$second"
+    return 0
+  fi
+  if [ -r /dev/urandom ]; then
+    od -An -N32 -tx1 /dev/urandom 2>/dev/null | tr -d ' \n'
+    printf '\n'
+    return 0
+  fi
+  return 1
+}
+
+case "$MODE" in
+  open|--verify|--print-url) ;;
+  *) fail "invalid_mode" ;;
+esac
+
+[ -x "$SERVER" ] || fail "server_binary_missing"
+[ -x "$CONTROL" ] || fail "module_control_missing"
+
+mkdir -p "$STATE_DIR/config" "$STATE_DIR/logs" "$RUNTIME_DIR"
+chmod 0700 "$STATE_DIR" "$RUNTIME_DIR" 2>/dev/null || true
+
+if [ "$MODE" = "--verify" ]; then
+  "$SERVER" \
+    -self-test \
+    -webroot "$MODDIR/webroot" \
+    -control "$CONTROL" \
+    -module-dir "$MODDIR" \
+    -state-dir "$STATE_DIR" \
+    -runtime-dir "$RUNTIME_DIR" \
+    -idle-timeout 15m \
+    -session-ttl 15m \
+    -job-timeout 30m \
+    -max-jobs 2 || fail "server_self_test_failed"
+  echo "action_mode=standalone_browser"
+  echo "browser_bind=127.0.0.1"
+  echo "browser_port=dynamic"
+  echo "bootstrap=one_time_token_to_http_only_cookie"
+  echo "token_in_argv=no"
+  echo "runtime_dir=$RUNTIME_DIR"
+  echo "embedded_host_bootstrap=available"
+  echo "server_detach=hup_safe"
+  echo "RESULT: WEBUI_ACTION_VERIFY_DONE outcome=success command_exit_code=0 workflow_exit_code=0"
+  exit 0
 fi
 
-if [ "$webui_rc" != 0 ]; then
-  printf '%s\n' "RESULT: BOOT_WATCH_WEBUI_ACTION_REFRESH_DONE rc=$webui_rc reason=webui_export_failed"
-  exit "$webui_rc"
+stop_server
+rm -f "$LOG_FILE"
+
+TOKEN=$(make_token) || fail "secure_token_generation_failed"
+case "$TOKEN" in
+  *[!0-9a-f]*|"") fail "secure_token_generation_failed" ;;
+esac
+[ "${#TOKEN}" -ge 64 ] || fail "secure_token_generation_failed"
+printf '%s\n' "$TOKEN" > "$TOKEN_FILE"
+chmod 0600 "$TOKEN_FILE"
+
+set -- "$SERVER" \
+  -listen 127.0.0.1:0 \
+  -webroot "$MODDIR/webroot" \
+  -control "$CONTROL" \
+  -module-dir "$MODDIR" \
+  -state-dir "$STATE_DIR" \
+  -runtime-dir "$RUNTIME_DIR" \
+  -token-file "$TOKEN_FILE" \
+  -state-file "$READY_FILE" \
+  -pid-file "$PID_FILE" \
+  -idle-timeout "${WEBUI_IDLE_TIMEOUT:-15m}" \
+  -session-ttl "${WEBUI_SESSION_TTL:-15m}" \
+  -job-timeout "${WEBUI_JOB_TIMEOUT:-30m}" \
+  -max-jobs "${WEBUI_MAX_JOBS:-2}"
+
+# The Action shell may disappear immediately after Android accepts the browser
+# intent. Keep the loopback server independent from that shell's stdio/HUP
+# lifetime so the browser can complete the one-time bootstrap after action.sh
+# returns. nohup is available in normal Android root-manager shell stacks; the
+# fallback preserves the same SIGHUP behavior without adding a hard dependency.
+if command -v nohup >/dev/null 2>&1; then
+  nohup "$@" </dev/null >> "$LOG_FILE" 2>&1 &
+else
+  (
+    trap '' HUP
+    exec "$@" </dev/null >> "$LOG_FILE" 2>&1
+  ) &
 fi
-if [ "$log_rc" != 0 ]; then
-  printf '%s\n' "RESULT: BOOT_WATCH_WEBUI_ACTION_REFRESH_DONE rc=$log_rc reason=log_export_failed"
-  exit "$log_rc"
-fi
-if [ "$orig_rc" != 0 ]; then
-  printf '%s\n' "RESULT: BOOT_WATCH_WEBUI_ACTION_REFRESH_DONE rc=$orig_rc reason=original_action_failed"
-  exit "$orig_rc"
+SERVER_PID=$!
+printf '%s\n' "$SERVER_PID" > "$PID_FILE"
+chmod 0600 "$PID_FILE"
+
+count=0
+while [ "$count" -lt 75 ]; do
+  [ -s "$READY_FILE" ] && break
+  pid_alive "$SERVER_PID" || break
+  count=$((count + 1))
+  sleep 0.2
+done
+
+[ -s "$READY_FILE" ] || {
+  tail -n 20 "$LOG_FILE" 2>/dev/null || true
+  fail "server_not_ready"
+}
+
+is_our_pid "$SERVER_PID" || fail "server_identity_mismatch"
+READY_PID=$(sed -n 's/.*"pid":[[:space:]]*\([0-9][0-9]*\).*/\1/p' "$READY_FILE" | head -n 1)
+case "$READY_PID" in ""|*[!0-9]*) fail "invalid_server_pid" ;; esac
+[ "$READY_PID" = "$SERVER_PID" ] || fail "server_pid_mismatch"
+
+PORT=$(sed -n 's/.*"port":[[:space:]]*\([0-9][0-9]*\).*/\1/p' "$READY_FILE" | head -n 1)
+case "$PORT" in ""|*[!0-9]*) fail "invalid_server_port" ;; esac
+[ "$PORT" -ge 1024 ] && [ "$PORT" -le 65535 ] || fail "invalid_server_port"
+
+URL="http://127.0.0.1:$PORT/bootstrap?token=$TOKEN"
+
+if [ "$MODE" = "--print-url" ]; then
+  printf 'WEBUI_BOOTSTRAP_URL=%s\n' "$URL"
+  echo "browser_port=$PORT"
+  echo "server_scope=loopback_only"
+  echo "bootstrap_transport=embedded_host_redirect"
+  echo "server_detach=hup_safe"
+  echo "RESULT: WEBUI_ACTION_URL_DONE outcome=success command_exit_code=0 workflow_exit_code=0"
+  unset TOKEN URL
+  exit 0
 fi
 
-printf '%s\n' "RESULT: BOOT_WATCH_WEBUI_ACTION_REFRESH_DONE rc=0"
+CURRENT_USER=$(am get-current-user 2>/dev/null | tr -cd '0-9')
+[ -n "$CURRENT_USER" ] || CURRENT_USER=0
+if ! am start --user "$CURRENT_USER" \
+  -a android.intent.action.VIEW \
+  -c android.intent.category.BROWSABLE \
+  -d "$URL" >/dev/null 2>&1; then
+  fail "browser_launch_failed"
+fi
+
+unset TOKEN URL
+echo "WebUI opened in the default browser."
+echo "browser_port=$PORT"
+echo "browser_final_url_token_policy=one_time_bootstrap_then_clean_root"
+echo "server_scope=loopback_only"
+echo "server_detach=hup_safe"
+echo "RESULT: WEBUI_ACTION_OPEN_DONE outcome=success command_exit_code=0 workflow_exit_code=0"
 exit 0

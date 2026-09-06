@@ -7,7 +7,7 @@ mkdir -p "$RT"
 {
   echo "service_start=$(date +%Y-%m-%dT%H:%M:%S%z)"
   echo "module=boot-watch"
-  echo "version=0.2.10-webui-runtime-root-hotfix"
+  echo "version=0.2.11-vnext.1"
   if [ -d "$LEGACY_MOD" ]; then
     if [ -f "$LEGACY_MOD/module.prop" ] && grep -q "^id=boot-watch$" "$LEGACY_MOD/module.prop" 2>/dev/null; then
       echo "legacy_pixel_boot_watch_marked_remove=no_active_id_at_legacy_path"
