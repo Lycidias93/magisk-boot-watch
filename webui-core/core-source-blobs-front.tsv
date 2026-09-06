@@ -8,3 +8,5 @@ src/magisk-module/webroot/race-guard.js	module/webroot/race-guard.js	7fb96452e66
 src/magisk-module/webroot/race-guard.css	module/webroot/race-guard.css	ba9d473ee2873ffc583785115573c78917df285c
 src/magisk-module/webroot/observability.js	module/webroot/observability.js	57566d2009d8a1e3181ee537487250bc42a40082
 src/magisk-module/webroot/observability.css	module/webroot/observability.css	3e0e9e3d3cb61f100644d7b1e92ac02876a4f5e7
+src/magisk-module/webroot/v03.js	module/webroot/v03.js	d6dfe510959e4dd7968134e81148302765cf90c7
+src/magisk-module/webroot/v04.js	module/webroot/v04.js	df659077332cc47632ef9d347d6ff02565f29ded
